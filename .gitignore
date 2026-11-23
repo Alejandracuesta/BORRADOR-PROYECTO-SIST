@@ -11,3 +11,9 @@ TestResults/
 
 # Archivos temporales
 *.log
+
+# Base de datos SQLite local y sus archivos auxiliares
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
