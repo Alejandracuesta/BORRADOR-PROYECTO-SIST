@@ -2,7 +2,13 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using QuizArena.Servidor.Data;
 
-var builder = WebApplication.CreateBuilder(args);
+// Este argumento inicia únicamente la operación local de mantenimiento.
+bool importarPreguntas = args.Contains("--importar-preguntas");
+string[] argumentosWeb = args
+    .Where(a => a != "--importar-preguntas")
+    .ToArray();
+
+var builder = WebApplication.CreateBuilder(argumentosWeb);
 
 // Registrar los controladores de nuestra API REST.
 builder.Services.AddControllers();
@@ -20,9 +26,30 @@ string conexionSqlite = new SqliteConnectionStringBuilder
 builder.Services.AddDbContext<QuizArenaDbContext>(options =>
     options.UseSqlite(conexionSqlite));
 
-var app = builder.Build();
+await using var app = builder.Build();
+
+if (importarPreguntas)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<QuizArenaDbContext>();
+    string archivoPreguntas = Path.Combine(
+        app.Environment.ContentRootPath, "Datos", "preguntas.json");
+
+    try
+    {
+        await ImportadorPreguntas.ImportarAsync(db, archivoPreguntas);
+    }
+    catch (Exception ex) when (
+        ex is InvalidDataException or IOException or UnauthorizedAccessException)
+    {
+        Console.Error.WriteLine($"No se han importado preguntas: {ex.Message}");
+        Environment.ExitCode = 1;
+    }
+
+    return;
+}
 
 // Asociar las rutas HTTP con los controladores.
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

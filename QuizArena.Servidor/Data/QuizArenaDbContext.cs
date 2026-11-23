@@ -11,6 +11,8 @@ public class QuizArenaDbContext : DbContext
     }
 
     public DbSet<Jugador> Jugadores => Set<Jugador>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Pregunta> Preguntas => Set<Pregunta>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,5 +37,56 @@ public class QuizArenaDbContext : DbContext
             .HasConversion(
                 fecha => fecha,
                 fecha => DateTime.SpecifyKind(fecha, DateTimeKind.Utc));
+
+        // Una categoría puede contener muchas preguntas.
+        var categoria = modelBuilder.Entity<Categoria>();
+
+        categoria.Property(c => c.Nombre)
+            .IsRequired()
+            .HasMaxLength(60);
+
+        categoria.Property(c => c.NombreNormalizado)
+            .IsRequired()
+            .HasMaxLength(60);
+
+        categoria.HasIndex(c => c.NombreNormalizado)
+            .IsUnique();
+
+        var pregunta = modelBuilder.Entity<Pregunta>();
+
+        pregunta.Property(p => p.Enunciado)
+            .IsRequired()
+            .HasMaxLength(300);
+
+        pregunta.Property(p => p.EnunciadoNormalizado)
+            .IsRequired()
+            .HasMaxLength(300);
+
+        pregunta.HasIndex(p => p.EnunciadoNormalizado)
+            .IsUnique();
+
+        pregunta.Property(p => p.Dificultad)
+            .HasConversion<string>()
+            .HasMaxLength(10);
+
+        pregunta.Property(p => p.OpcionA).HasMaxLength(150);
+        pregunta.Property(p => p.OpcionB).HasMaxLength(150);
+        pregunta.Property(p => p.OpcionC).HasMaxLength(150);
+        pregunta.Property(p => p.OpcionD).HasMaxLength(150);
+
+        pregunta.Property(p => p.RespuestaCorrecta)
+            .IsRequired()
+            .HasMaxLength(1);
+
+        pregunta.Property(p => p.Fuente)
+            .HasMaxLength(100);
+
+        pregunta.Property(p => p.Licencia)
+            .HasMaxLength(50);
+
+        pregunta.HasOne(p => p.Categoria)
+            .WithMany(c => c.Preguntas)
+            .HasForeignKey(p => p.CategoriaId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
