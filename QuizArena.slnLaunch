@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Quiz Arena - Servidor y cliente",
+    "Projects": [
+      {
+        "Path": "QuizArena.Servidor\\QuizArena.Servidor.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "QuizArena.Cliente\\QuizArena.Cliente.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

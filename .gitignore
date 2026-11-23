@@ -1,0 +1,13 @@
+# Archivos locales de Visual Studio
+.vs/
+*.user
+*.suo
+*.slnLaunch.user
+
+# Resultados de compilación
+**/bin/
+**/obj/
+TestResults/
+
+# Archivos temporales
+*.log
