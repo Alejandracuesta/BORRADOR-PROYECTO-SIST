@@ -41,6 +41,29 @@ public static class MotorPartidas
         };
     }
 
+    // Porcentaje de los puntos base que se conserva al responder en el último
+    // instante del plazo. Responder al abrir la pregunta da el 100 %.
+    public const double FactorMinimoVelocidad = 0.5;
+
+    // Puntos de un acierto según la rapidez: decrecen de forma lineal desde
+    // el 100 % de los puntos base (respuesta inmediata) hasta el 50 %
+    // (respuesta al agotarse el plazo). No incluye la bonificación de racha.
+    public static int PuntosPorVelocidad(
+        DificultadPregunta dificultad, TimeSpan tiempoRespuesta)
+    {
+        int puntosBase = PuntosBase(dificultad);
+        double plazo = TiempoPregunta(dificultad);
+
+        double segundos = Math.Clamp(
+            tiempoRespuesta.TotalSeconds, 0, plazo);
+
+        double factor = 1.0 -
+            (1.0 - FactorMinimoVelocidad) * (segundos / plazo);
+
+        return (int)Math.Round(
+            puntosBase * factor, MidpointRounding.AwayFromZero);
+    }
+
     public static int BonificacionRacha(int racha)
     {
         if (racha >= 5)
