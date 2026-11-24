@@ -1,6 +1,6 @@
 # BORRADOR-PROYECTO-SIST
 
-## Quiz Arena — fases 2.3 y 3: banco ampliado y acceso de jugadores
+## Quiz Arena — fase 5: motor de partidas individuales
 
 Solución C# para Visual Studio 2026 y **.NET 10**, con una API REST en
 `http://localhost:5080`, una base de datos SQLite y varias instancias WinForms.
@@ -8,6 +8,10 @@ Cada ventana puede acceder con una cuenta distinta y mantiene sus propias cookie
 
 La fase 2.3 incorpora 100 preguntas al banco inicial de 12. La fase 3 añade
 registro con contraseña, inicio de sesión, consulta del perfil y cierre de sesión.
+La fase 4 incorpora salas de espera compartidas, públicas o privadas, con
+configuración del anfitrión, control de aforo y estado de preparación.
+La fase 5 permite completar partidas individuales con preguntas compartidas,
+plazos oficiales, respuestas definitivas, puntuaciones y clasificación final.
 
 ```text
 QuizArena.sln
@@ -18,7 +22,9 @@ QuizArena.sln
 │   │   ├── JugadoresController.cs
 │   │   ├── CategoriasController.cs
 │   │   ├── PreguntasController.cs
-│   │   └── AccesoController.cs
+│   │   ├── AccesoController.cs
+│   │   ├── SalasController.cs
+│   │   └── PartidasController.cs
 │   ├── Data/
 │   │   ├── QuizArenaDbContext.cs
 │   │   └── ImportadorPreguntas.cs
@@ -26,13 +32,27 @@ QuizArena.sln
 │   │   ├── Jugador.cs
 │   │   ├── Categoria.cs
 │   │   ├── Pregunta.cs
-│   │   └── DificultadPregunta.cs
+│   │   ├── DificultadPregunta.cs
+│   │   ├── Sala.cs
+│   │   ├── ParticipanteSala.cs
+│   │   ├── ModalidadSala.cs
+│   │   ├── EstadoSala.cs
+│   │   ├── FasePartida.cs
+│   │   ├── Partida.cs
+│   │   ├── PartidaPregunta.cs
+│   │   ├── PartidaJugador.cs
+│   │   └── RespuestaPartida.cs
 │   ├── DTOs/
 │   │   ├── CrearJugadorDto.cs
 │   │   ├── JugadorRespuestaDto.cs
 │   │   ├── CredencialesDto.cs
 │   │   ├── PreguntaImportacionDto.cs
-│   │   └── PreguntaPublicaDto.cs
+│   │   ├── PreguntaPublicaDto.cs
+│   │   ├── SalasDto.cs
+│   │   └── PartidasDto.cs
+│   ├── Services/
+│   │   ├── CoordinadorSalas.cs
+│   │   └── MotorPartidas.cs
 │   ├── Datos/
 │   │   ├── preguntas.json
 │   │   └── preguntas_trivial_100_quizarena.json   Solo local, excluido de Git
@@ -41,9 +61,17 @@ QuizArena.sln
 └── QuizArena.Cliente
     ├── Program.cs
     ├── PerfilJugador.cs
+    ├── Models/SalasApi.cs
+    ├── Models/PartidasApi.cs
     ├── Form1.cs
     ├── Form1.Designer.cs
-    └── Form1.resx
+    ├── Form1.resx
+    ├── SalasForm.cs
+    ├── SalasForm.Designer.cs
+    ├── SalasForm.resx
+    ├── PartidaForm.cs
+    ├── PartidaForm.Designer.cs
+    └── PartidaForm.resx
 ```
 
 El servidor mantiene las referencias directas a
@@ -57,7 +85,8 @@ utilizados por la solución; esta fase no necesita paquetes adicionales.
 Los dos proyectos son aplicaciones independientes de la misma solución y se
 comunican por HTTP. El cliente no tiene una referencia al ensamblado del servidor.
 Los controladores reciben `QuizArenaDbContext` mediante inyección de dependencias;
-el contexto contiene `Jugadores`, `Categorias` y `Preguntas`.
+el contexto contiene `Jugadores`, `Categorias`, `Preguntas`, `Salas` y
+`ParticipantesSala`.
 
 - `Jugador` tiene nombre visible, nombre normalizado único, fecha de registro UTC
   y `PasswordHash` nullable. `PasswordHasher<Jugador>` genera y verifica los hashes.
@@ -81,6 +110,20 @@ contraseñas no forman parte de las respuestas públicas.
 `dificultad` y las cuatro opciones. Excluye `respuestaCorrecta` y `correcta`.
 El importador local utiliza `PreguntaImportacionDto`, que sí contiene la solución.
 
+`Sala` guarda un código único de ocho caracteres, nombre, privacidad, modalidad,
+estado, aforo, número de preguntas, filtros y anfitrión actual (`CreadorId`). Se
+relaciona con un jugador anfitrión, una categoría opcional y muchos participantes.
+`ParticipanteSala` relaciona sala y jugador, con `Preparado` y `UnidoUtc`. Los
+índices únicos impiden duplicar una pertenencia y limitan cada jugador a una sala.
+El borrado de una sala elimina sus participantes en cascada; las referencias a
+jugadores y categorías usan borrado restringido.
+
+`CoordinadorSalas` se registra como singleton y serializa las escrituras con un
+`SemaphoreSlim`. Así se comprueba y ocupa la última plaza dentro de la misma
+sección crítica. Esta coordinación cubre un único proceso servidor, que es el
+despliegue de esta fase. Los DTO de salas devuelven configuración y participantes
+sin credenciales ni soluciones de preguntas.
+
 ### Preparar o actualizar SQLite
 
 1. Abrir `QuizArena.sln` y restaurar los paquetes NuGet.
@@ -101,6 +144,8 @@ Las migraciones se acumulan en este orden:
 | `CreacionInicial` | Crea la tabla de jugadores |
 | `BancoPreguntas` | Añade categorías y preguntas |
 | `AccesoJugadores` | Añade `PasswordHash` nullable a los jugadores |
+| `SalasMultijugador` | Crea salas y participantes con sus relaciones e índices únicos |
+| `MotorPartidasIndividuales` | Crea partidas, preguntas asignadas, clasificación y respuestas |
 
 Al actualizar, se conservan los jugadores, categorías y preguntas existentes.
 No hay que eliminar la base ni volver a generar estas migraciones en un clon
@@ -270,9 +315,186 @@ Las peticiones independientes pueden compartir preguntas.
 
 Las consultas generales siguen siendo públicas. El archivo JSON no tiene una
 ruta estática de descarga y las soluciones se reservan para la importación y
-la lógica interna. Las salas, rondas y partidas se incorporarán en fases posteriores.
+la lógica interna. Las partidas individuales usan el motor de la fase 5.
 
-### Comprobaciones superadas
+### Salas de espera en WinForms
+
+Tras iniciar sesión, **Ir a las salas** abre `SalasForm` con el mismo `HttpClient`
+autenticado de `Form1`. La ventana tiene un constructor para el diseñador y otro
+para ejecución; su código visual se conserva en `SalasForm.Designer.cs`.
+
+- Crear una sala pública o privada con nombre de 3 a 40 caracteres.
+- Elegir **Individual** (2–6 plazas) o **Equipos** (4–12 plazas), 5/10/15 preguntas,
+  categoría opcional y dificultad opcional. Deben existir suficientes preguntas
+  activas para los filtros elegidos.
+- Consultar las salas públicas en espera, ver su ocupación y unirse a la
+  seleccionada; las privadas requieren introducir su código de ocho caracteres.
+- Ver participantes y anfitrión, marcar **Estoy preparado** o **Cancelar preparado**.
+- Guardar configuración únicamente como anfitrión. Cada guardado reinicia el
+  estado de preparación de todos; no se permite reducir el aforo por debajo de
+  la ocupación actual.
+- **Abandonar sala** libera la plaza. Si sale el anfitrión, lo sustituye el
+  participante más antiguo. Una sala en espera se elimina al salir el último;
+  una sala finalizada conserva su historial y elimina solo la pertenencia activa.
+
+Un `System.Windows.Forms.Timer` consulta los datos cada dos segundos sin solapar
+peticiones. El sondeo conserva la selección pública y los cambios del anfitrión
+pendientes de guardar. Al cerrar la ventana se detiene el temporizador y se
+cancelan sus peticiones, conservando el cliente HTTP del formulario de acceso.
+Una sesión caducada devuelve al acceso para volver a identificarse.
+
+**Cerrar la ventana no abandona la sala.** Al abrirla de nuevo se recupera la
+pertenencia guardada. Las salas, participantes y preparación persisten al
+reiniciar el servidor. La lista representa miembros, no presencia de red: esta
+fase no detecta desconexiones. La fase 5 permite iniciar partidas individuales;
+la asignación de equipos y SignalR quedan para fases posteriores.
+
+### API de salas
+
+Todas estas rutas requieren una cookie autenticada; sin ella devuelven HTTP 401.
+El servidor obtiene al jugador de la sesión, sin aceptar su identidad en el cuerpo.
+
+| Método | Ruta | Resultado |
+| --- | --- | --- |
+| GET | `/api/salas/publicas` | Salas públicas en espera con ocupación y configuración resumida |
+| GET | `/api/salas/mi-sala` | Sala del jugador; HTTP 404 si no pertenece a ninguna |
+| GET | `/api/salas/{codigo}` | Detalle para miembros; HTTP 403 a otros jugadores y HTTP 404 si no existe |
+| POST | `/api/salas` | HTTP 201; crea la sala y añade al anfitrión automáticamente |
+| POST | `/api/salas/{codigo}/unirse` | HTTP 200; HTTP 409 si ya tiene sala, está llena o no está en espera |
+| PUT | `/api/salas/{codigo}/preparado` | Actualiza solo al jugador autenticado con `{ "preparado": true/false }` |
+| PUT | `/api/salas/{codigo}/configuracion` | HTTP 200 para anfitrión; HTTP 403 para otros; reinicia la preparación |
+| DELETE | `/api/salas/{codigo}/salir` | HTTP 204 en espera o finalizada; conserva el historial final y bloquea la salida durante el juego |
+
+Crear y configurar reciben `nombre`, `esPrivada`, `modalidad` (`Individual` o
+`Equipos`), `maxJugadores`, `numeroPreguntas`, `categoriaId` nullable y `dificultad`
+nullable (1 Fácil, 2 Media, 3 Difícil). Configuraciones inválidas o sin suficientes
+preguntas devuelven HTTP 400; una reducción de aforo incompatible devuelve 409.
+
+### Partidas individuales
+
+En una sala **Individual**, con al menos dos participantes y todos preparados,
+solo el anfitrión puede pulsar **Iniciar partida**. Después, cada jugador abre
+**Entrar en partida** y recibe el mismo enunciado, opciones y plazo oficial.
+La selección se realiza en el servidor con preguntas activas que cumplen los
+filtros de la sala, sin repetir preguntas dentro de una partida.
+
+`Partida` conserva la sala, fase, índice de pregunta y `FinFaseUtc`.
+`PartidaPregunta` fija el orden y las fechas de apertura/cierre de cada pregunta.
+`PartidaJugador` mantiene puntos, aciertos y racha; `RespuestaPartida` guarda la
+opción definitiva, corrección interna, puntos ganados y fecha de envío UTC.
+
+La migración `20261124140538_MotorPartidasIndividuales` crea únicamente
+`Partidas`, `PartidasPreguntas`, `PartidasJugadores` y `RespuestasPartida`, sin
+alterar las tablas anteriores. Hay índices únicos para una partida por sala,
+una pregunta por posición, una asignación por pregunta, un jugador por marcador
+y una respuesta por jugador/pregunta. El borrado de una sala con partida está
+restringido; las entidades dependientes de una partida usan cascada.
+
+`MotorPartidas` avanza al consultar el estado o responder, usando UTC del
+servidor. No necesita un servicio en segundo plano. Las fases son:
+
+1. **CuentaAtras**: tres segundos antes de la primera pregunta.
+2. **Pregunta**: termina al responder todos o agotarse el tiempo.
+3. **Resultados**: cinco segundos con solución, respuestas y puntos de la ronda.
+4. **Finalizada**: clasificación definitiva después de los últimos resultados.
+
+| Dificultad | Plazo | Puntos por acierto |
+| --- | ---: | ---: |
+| Fácil | 20 segundos | 100 |
+| Media | 20 segundos | 200 |
+| Difícil | 30 segundos | 300 |
+
+Los aciertos consecutivos 1–2 no tienen bono, 3–4 añaden 50 puntos por acierto
+y desde el quinto se añaden 100. Fallos y omisiones otorgan cero y reinician la
+racha. Cinco fáciles consecutivas suman **100, 200, 350, 500 y 700** puntos
+acumulados. La clasificación se ordena por puntos descendentes, con nombre como
+orden visual para empates; WinForms muestra la misma posición a quienes empatan.
+
+Las operaciones de partidas y salas comparten el `SemaphoreSlim` singleton.
+Dos inicios simultáneos generan una partida y dos respuestas del mismo jugador
+generan un único registro, reforzado por los índices SQLite. La identidad y la
+validez temporal las decide el servidor. Esta coordinación corresponde a un
+único proceso servidor.
+
+Durante una pregunta, el DTO solo muestra la opción del propio jugador. La
+solución, respuestas ajenas y puntos de esa ronda permanecen ocultos hasta su
+cierre. Aunque las puntuaciones internas se guardan al responder, el marcador
+público se calcula a partir de rondas cerradas para evitar revelar aciertos.
+
+La partida sigue el calendario guardado aunque se cierren clientes o se detenga
+el servidor. Al volver a consultar, el motor recupera todas las transiciones
+vencidas desde sus fechas originales; el reinicio no pausa ni prolonga plazos.
+
+### API de partidas
+
+Las tres operaciones requieren la cookie autenticada y comparten la sesión de
+acceso existente.
+
+| Método | Ruta | Comportamiento |
+| --- | --- | --- |
+| POST | `/api/partidas/{codigo}/iniciar` | HTTP 200 para el anfitrión; HTTP 403 para otro jugador; HTTP 409 si faltan requisitos, la sala ya está jugando o es de equipos |
+| GET | `/api/partidas/actual` | Estado de la partida de la sala del jugador; HTTP 404 sin sala o sin partida |
+| POST | `/api/partidas/responder` | Recibe `preguntaId` y `opcion` A/B/C/D; HTTP 200 al aceptar, HTTP 409 por duplicado, pregunta distinta, fase cerrada o plazo vencido; HTTP 400 por opción inválida |
+
+`EstadoPartidaDto` incluye fase, número/total de preguntas, `FinFaseUtc`,
+`ServidorUtc`, pregunta pública, `MiRespuesta`, resultado de ronda y marcador.
+`Resultado` solo tiene valor en la fase `Resultados`; la cuenta atrás y el final
+no envían preguntas anticipadas. No hay un endpoint de historial en esta fase,
+pero las asignaciones, respuestas y puntuaciones permanecen en SQLite.
+
+### Pantalla de juego y prueba manual
+
+`PartidaForm` reutiliza el `HttpClient` autenticado. Consulta cada segundo y
+serializa consultas y envíos para evitar restaurar botones con un estado antiguo.
+El contador usa las fechas del servidor, una estimación del viaje de la petición
+y `Stopwatch`; no depende de que el reloj local esté correctamente ajustado.
+El contador visual no decide si se acepta una respuesta.
+
+Después de enviar, los botones se bloquean y se recupera `MiRespuesta` del
+servidor. Un error de comunicación mantiene bloqueado el envío hasta confirmar
+de nuevo el estado. Al cerrar se cancelan peticiones y temporizador, sin liberar
+el cliente HTTP compartido. Una sesión caducada devuelve al formulario de acceso.
+
+Para probar una partida completa:
+
+1. Iniciar servidor y cliente mediante **F5** y abrir dos clientes adicionales.
+2. Acceder con tres cuentas, crear una sala individual de tres plazas y cinco
+   preguntas, unirse y marcar preparados a los tres.
+3. Iniciar como anfitrión y abrir **Entrar en partida** en cada cliente.
+4. Responder independientemente; comprobar resultados de ronda y clasificación.
+5. Volver a la sala y **Abandonar sala** al finalizar. Se podrá crear otra sala
+   y se conservarán los resultados de la anterior.
+
+Cerrar la pantalla durante el juego no abandona ni pausa la partida. Se puede
+volver a entrar desde la sala con el tiempo que quede. En esta fase no se inicia
+el modo equipos, no hay revancha y no se incorpora SignalR.
+
+### Comprobaciones de la fase 4
+
+Validación realizada el **24 de noviembre de 2026**:
+
+- Solución compilada con **0 errores y 0 advertencias**, sin paquetes nuevos.
+- Migración `20261124132956_SalasMultijugador` aplicada y modelo sin cambios
+  pendientes. Conservados exactamente los seis jugadores, sus hashes, las once
+  categorías y las 112 preguntas anteriores.
+- **35 comprobaciones de API/datos**: operaciones de salas, permisos, validación,
+  privacidad, preparación, transferencia y eliminación. Incluyen **cuatro carreras
+  simultáneas** por la última plaza: en cada una solo entró un participante.
+- **3 comprobaciones tras reiniciar**: sala y preparación persistentes, datos
+  anteriores intactos y retirada de las salas temporales.
+- **32 comprobaciones de regresión** de acceso, cookies, perfiles y banco.
+- Tres procesos WinForms con CarlosQA, LuciaQA y PabloQA: sala pública de tres
+  plazas, entrada por lista y código, participantes iguales, preparación visible
+  por sondeo y cambio de cinco a diez preguntas que reinicia la preparación.
+- Cierre y reapertura de `SalasForm` con sesión y pertenencia conservadas;
+  transferencia del anfitrión a Lucía y después a Pablo; eliminación al salir
+  el último y lista pública vacía. Clientes temporales cerrados al terminar.
+
+SQLite y el banco de licencia pendiente continúan excluidos de Git mediante el
+`.gitignore` existente. El respaldo previo a la migración se conserva fuera del
+repositorio.
+
+### Comprobaciones de las fases anteriores
 
 Validación completada el **24 de noviembre de 2026**: compilación con **0 errores
 y 0 advertencias**, **32 comprobaciones de API y datos** superadas y pruebas

@@ -13,6 +13,21 @@ public class QuizArenaDbContext : DbContext
     public DbSet<Jugador> Jugadores => Set<Jugador>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Pregunta> Preguntas => Set<Pregunta>();
+    public DbSet<Sala> Salas => Set<Sala>();
+
+    public DbSet<ParticipanteSala> ParticipantesSala
+        => Set<ParticipanteSala>();
+
+    public DbSet<Partida> Partidas => Set<Partida>();
+
+    public DbSet<PartidaPregunta> PartidasPreguntas
+        => Set<PartidaPregunta>();
+
+    public DbSet<PartidaJugador> PartidasJugadores
+        => Set<PartidaJugador>();
+
+    public DbSet<RespuestaPartida> RespuestasPartida
+        => Set<RespuestaPartida>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,5 +103,167 @@ public class QuizArenaDbContext : DbContext
             .WithMany(c => c.Preguntas)
             .HasForeignKey(p => p.CategoriaId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Configuración de salas.
+        var sala = modelBuilder.Entity<Sala>();
+
+        sala.Property(s => s.Codigo)
+            .IsRequired()
+            .HasMaxLength(8);
+
+        sala.HasIndex(s => s.Codigo)
+            .IsUnique();
+
+        sala.Property(s => s.Nombre)
+            .IsRequired()
+            .HasMaxLength(40);
+
+        sala.Property(s => s.Modalidad)
+            .HasConversion<string>()
+            .HasMaxLength(15);
+
+        sala.Property(s => s.Estado)
+            .HasConversion<string>()
+            .HasMaxLength(15);
+
+        sala.Property(s => s.Dificultad)
+            .HasConversion<string>()
+            .HasMaxLength(10);
+
+        sala.HasOne(s => s.Creador)
+            .WithMany()
+            .HasForeignKey(s => s.CreadorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        sala.HasOne(s => s.Categoria)
+            .WithMany()
+            .HasForeignKey(s => s.CategoriaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configuración de participantes.
+        var participante = modelBuilder.Entity<ParticipanteSala>();
+
+        participante.HasOne(p => p.Sala)
+            .WithMany(s => s.Participantes)
+            .HasForeignKey(p => p.SalaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        participante.HasOne(p => p.Jugador)
+            .WithMany()
+            .HasForeignKey(p => p.JugadorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Impide registrar al mismo jugador dos veces en una sala.
+        participante.HasIndex(p => new { p.SalaId, p.JugadorId })
+            .IsUnique();
+
+        // Durante la fase de espera, cada jugador solo puede
+        // pertenecer a una sala.
+        participante.HasIndex(p => p.JugadorId)
+            .IsUnique();
+
+        // PARTIDAS
+        var partida = modelBuilder.Entity<Partida>();
+
+        partida.HasIndex(p => p.SalaId).IsUnique();
+
+        partida.HasOne(p => p.Sala)
+            .WithMany()
+            .HasForeignKey(p => p.SalaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        partida.Property(p => p.Fase)
+            .HasConversion<string>()
+            .HasMaxLength(15);
+
+        partida.Property(p => p.CreadaUtc)
+            .HasConversion(
+                f => f,
+                f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
+
+        partida.Property(p => p.FinFaseUtc)
+            .HasConversion(
+                f => f,
+                f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
+
+        // PREGUNTAS ASIGNADAS A UNA PARTIDA
+        var partidaPregunta =
+            modelBuilder.Entity<PartidaPregunta>();
+
+        partidaPregunta.HasOne(p => p.Partida)
+            .WithMany(p => p.Preguntas)
+            .HasForeignKey(p => p.PartidaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        partidaPregunta.HasOne(p => p.Pregunta)
+            .WithMany()
+            .HasForeignKey(p => p.PreguntaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        partidaPregunta.HasIndex(
+            p => new { p.PartidaId, p.Orden })
+            .IsUnique();
+
+        partidaPregunta.HasIndex(
+            p => new { p.PartidaId, p.PreguntaId })
+            .IsUnique();
+
+        partidaPregunta.Property(p => p.AperturaUtc)
+            .HasConversion(
+                f => f,
+                f => f.HasValue
+                    ? DateTime.SpecifyKind(f.Value, DateTimeKind.Utc)
+                    : null);
+
+        partidaPregunta.Property(p => p.CierreUtc)
+            .HasConversion(
+                f => f,
+                f => f.HasValue
+                    ? DateTime.SpecifyKind(f.Value, DateTimeKind.Utc)
+                    : null);
+
+        // PARTICIPANTES Y PUNTUACIONES
+        var partidaJugador =
+            modelBuilder.Entity<PartidaJugador>();
+
+        partidaJugador.HasOne(p => p.Partida)
+            .WithMany(p => p.Jugadores)
+            .HasForeignKey(p => p.PartidaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        partidaJugador.HasOne(p => p.Jugador)
+            .WithMany()
+            .HasForeignKey(p => p.JugadorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        partidaJugador.HasIndex(
+            p => new { p.PartidaId, p.JugadorId })
+            .IsUnique();
+
+        // RESPUESTAS DE LOS JUGADORES
+        var respuesta = modelBuilder.Entity<RespuestaPartida>();
+
+        respuesta.HasOne(r => r.PartidaPregunta)
+            .WithMany(p => p.Respuestas)
+            .HasForeignKey(r => r.PartidaPreguntaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        respuesta.HasOne(r => r.Jugador)
+            .WithMany()
+            .HasForeignKey(r => r.JugadorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        respuesta.Property(r => r.Opcion)
+            .IsRequired()
+            .HasMaxLength(1);
+
+        respuesta.HasIndex(
+            r => new { r.PartidaPreguntaId, r.JugadorId })
+            .IsUnique();
+
+        respuesta.Property(r => r.EnviadaUtc)
+            .HasConversion(
+                f => f,
+                f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
     }
 }

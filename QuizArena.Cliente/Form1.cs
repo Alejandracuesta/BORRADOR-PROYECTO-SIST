@@ -34,6 +34,7 @@ public partial class Form1 : Form
         btnEntrar.Click += btnEntrar_Click;
         btnPerfil.Click += btnPerfil_Click;
         btnSalir.Click += btnSalir_Click;
+        btnSalas.Click += btnSalas_Click;
         Disposed += (_, _) => LiberarRecursos();
 
         ActualizarControles();
@@ -179,6 +180,17 @@ public partial class Form1 : Form
         });
     }
 
+    private void btnSalas_Click(object? sender, EventArgs e)
+    {
+        if (!PuedeActualizar || solicitudEnCurso || jugadorActual is null) return;
+        using var ventanaSalas = new SalasForm(httpClient, jugadorActual.Id);
+        if (ventanaSalas.ShowDialog(this) == DialogResult.Abort && PuedeActualizar)
+        {
+            CerrarSesionLocal();
+            lblEstado.Text = "Sesión finalizada";
+        }
+    }
+
     // Conserva la comprobación de conexión de la fase 1.
     private async void btnComprobar_Click(object? sender, EventArgs e)
     {
@@ -251,6 +263,7 @@ public partial class Form1 : Form
         btnEntrar.Enabled = sinSesion && disponible;
         btnPerfil.Enabled = !sinSesion && disponible;
         btnSalir.Enabled = !sinSesion && disponible;
+        btnSalas.Enabled = !sinSesion && disponible;
         btnComprobar.Enabled = disponible;
         UseWaitCursor = solicitudEnCurso;
     }

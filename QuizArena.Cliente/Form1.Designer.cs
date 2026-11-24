@@ -27,6 +27,7 @@ partial class Form1
         lblJugador = new Label();
         btnPerfil = new Button();
         btnSalir = new Button();
+        btnSalas = new Button();
         btnComprobar = new Button();
         lblEstado = new Label();
         SuspendLayout();
@@ -123,12 +124,22 @@ partial class Form1
         btnSalir.Text = "Cerrar sesión";
         btnSalir.UseVisualStyleBackColor = true;
         //
+        // btnSalas
+        //
+        btnSalas.Enabled = false;
+        btnSalas.Location = new Point(350, 265);
+        btnSalas.Name = "btnSalas";
+        btnSalas.Size = new Size(160, 38);
+        btnSalas.TabIndex = 10;
+        btnSalas.Text = "Ir a las salas";
+        btnSalas.UseVisualStyleBackColor = true;
+        //
         // btnComprobar
         //
         btnComprobar.Location = new Point(30, 335);
         btnComprobar.Name = "btnComprobar";
         btnComprobar.Size = new Size(210, 38);
-        btnComprobar.TabIndex = 10;
+        btnComprobar.TabIndex = 11;
         btnComprobar.Text = "Comprobar conexión";
         btnComprobar.UseVisualStyleBackColor = true;
         btnComprobar.Click += btnComprobar_Click;
@@ -139,7 +150,7 @@ partial class Form1
         lblEstado.Location = new Point(255, 345);
         lblEstado.Name = "lblEstado";
         lblEstado.Size = new Size(103, 19);
-        lblEstado.TabIndex = 11;
+        lblEstado.TabIndex = 12;
         lblEstado.Text = "Sin comprobar";
         //
         // Form1
@@ -151,6 +162,7 @@ partial class Form1
         Controls.Add(lblEstado);
         Controls.Add(btnComprobar);
         Controls.Add(btnSalir);
+        Controls.Add(btnSalas);
         Controls.Add(btnPerfil);
         Controls.Add(lblJugador);
         Controls.Add(btnEntrar);
@@ -182,6 +194,7 @@ partial class Form1
     private Label lblJugador;
     private Button btnPerfil;
     private Button btnSalir;
+    private Button btnSalas;
     private Button btnComprobar;
     private Label lblEstado;
 }
