@@ -1,6 +1,6 @@
 # BORRADOR-PROYECTO-SIST
 
-## Quiz Arena — fase 6: entrada automática y partidas por equipos
+## Quiz Arena — fase 7: tiempo real, chat, revancha e historial
 
 Solución C# para Visual Studio 2026 y **.NET 10**, con una API REST en
 `http://localhost:5080`, una base de datos SQLite y varias instancias WinForms.
@@ -86,7 +86,9 @@ El servidor mantiene las referencias directas a
 `Microsoft.EntityFrameworkCore.Sqlite` y `Microsoft.EntityFrameworkCore.Tools`,
 ambas en la versión **10.0.14**. La autenticación por cookies, `PasswordHasher` y
 `System.Text.Json` están disponibles con los componentes de ASP.NET Core y .NET
-utilizados por la solución; esta fase no necesita paquetes adicionales.
+utilizados por la solución. La fase 7 añade al cliente
+`Microsoft.AspNetCore.SignalR.Client` **10.0.14**; SignalR del servidor forma
+parte del framework ASP.NET Core.
 
 ### Arquitectura y relaciones
 
@@ -611,6 +613,83 @@ solo aparece en ese modo y se habilita con unanimidad, plazo vigente y estado
 confirmado del servidor. Tras confirmar se bloquea el cambio de voto. Las
 consultas, votos y confirmaciones comparten la exclusión de operaciones del
 cliente, conservando cancelación al cerrar y el reloj oficial de la fase 5.
+
+
+### Tiempo real y funcionalidades de la fase 7
+
+REST y SQLite siguen siendo la fuente oficial de estados, votos, respuestas y
+puntos. SignalR avisa de cambios y transporta chat y reacciones. Una conexión
+`TiempoRealCliente` comparte las cookies de `Form1` y se reutiliza entre la sala
+y la partida; cada proceso WinForms mantiene una identidad independiente.
+
+El Hub autenticado `/hubs/salas` (`Hubs/SalaHub.cs`) comprueba la pertenencia al
+invocar `EntrarSala`. Los grupos `sala:CODIGO` y `equipo:ID` reciben eventos de
+`NotificadorTiempoReal`: `SalaActualizada`, `SalasPublicasActualizadas`,
+`PartidaActualizada` y `VotosEquipoActualizados`. Los votos provisionales avisan
+solo al equipo propio. El cliente vuelve a REST para obtener el estado oficial.
+Las notificaciones que llegan durante otra operación se recuperan después,
+y los controles se actualizan en el hilo de WinForms.
+
+`SupervisorPartidas` revisa cada segundo las partidas cuyo plazo ha vencido,
+utilizando el mismo `CoordinadorSalas` que REST y el chat. Ejecuta el motor,
+guarda las transiciones y notifica fuera del semáforo. Las rondas avanzan aun
+sin consultas de clientes; al reiniciar se recuperan los plazos vencidos.
+El reloj local se dibuja cada segundo y el sondeo REST de respaldo se realiza
+cada diez segundos. La reconexión automática de SignalR vuelve a incorporar la
+conexión a sus grupos; el respaldo también reintenta el primer inicio fallido
+y los cierres que hayan agotado los reintentos. Los indicadores muestran si se
+usa tiempo real o REST. Cerrar WinForms requiere volver a iniciar sesión para
+recuperar su sala; respuestas y tiempo no se reinician.
+
+`MensajeSala` conserva el chat en SQLite. La migración
+`20261124224017_ChatSalas` añade `MensajesSala`, relaciones e índice de historial.
+En espera, en individual y tras finalizar se permite chat general. Durante
+una partida por equipos se permite exclusivamente el chat privado del equipo
+actual. El servidor calcula destinatarios con los miembros autenticados de
+SQLite y utiliza `Clients.Users`; una conexión antigua no autoriza mensajes
+tras abandonar. `ChatController` devuelve los últimos 50 mensajes autorizados,
+ordenados cronológicamente. El cliente elimina duplicados por Id, recupera el
+historial tras reconectar y adapta el ámbito cuando cambia la fase.
+
+`ControlFrecuencia` limita cada cuenta a un mensaje por segundo y una reacción
+cada dos segundos, incluso con varias conexiones. Los mensajes admiten de 1 a
+250 caracteres. Aplauso, Ánimo y Sorpresa no se almacenan en SQLite.
+
+La migración `20261124224444_RevanchaSalas` sustituye el índice único de SalaId
+por uno no único. Una revancha autorizada vuelve la sala finalizada a espera
+con su código y configuración, conserva las partidas anteriores y desmarca
+a todos. Exige anfitrión y mínimo de dos jugadores (cuatro en equipos).
+La siguiente partida se crea al volver a preparar e iniciar. Las consultas
+seleccionan siempre la partida con mayor Id. Salir de una revancha en espera
+conserva los historiales y cierra la sala si ya no quedan miembros.
+
+`ClasificacionController` calcula las veinte mejores cuentas individuales por
+puntos acumulados y aciertos, y los veinte mejores resultados de equipos por
+partida. No se agrupan equipos solo por nombre. Las asignaciones históricas
+permiten distinguir individual/equipos aunque después cambie la modalidad de
+la sala. `ClasificacionForm` permite actualizar ambos listados desde las salas.
+
+| Operación | Ruta o método | Requisito |
+| --- | --- | --- |
+| Hub | `/hubs/salas` | Sesión de la misma cuenta REST |
+| Hub | `EntrarSala(codigo)` / `SalirSala()` | Pertenencia comprobada |
+| Hub | `EnviarMensaje(codigo, texto, soloEquipo)` | Ámbito oficial y límite de frecuencia |
+| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y límite de frecuencia |
+| GET | `/api/chat/{codigo}` | Miembro; solo historial autorizado |
+| POST | `/api/salas/{codigo}/revancha` | Anfitrión de sala finalizada |
+| GET | `/api/clasificacion/individual` | Autenticación |
+| GET | `/api/clasificacion/equipos` | Autenticación |
+
+Para reproducir la demostración: iniciar un servidor en localhost:5080 y cuatro
+`QuizArena.Cliente.exe`; acceder con cuentas distintas, crear sala Equipos de
+cuatro plazas, unirse por código y prepararse. Iniciar una vez, abrir chat,
+comprobar que solo el compañero recibe mensajes y votos, cambiar el voto hasta
+consenso y confirmar. Al terminar, volver a la sala, solicitar revancha,
+prepararse e iniciar otra partida; consultar después la clasificación global.
+Para probar reconexión, ejecutar clientes separados del depurador, detener el
+servidor y volverlo a iniciar sin cerrar esos clientes. El tiempo continúa.
+
+Estado detallado de verificación y siguiente paso: [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
 
 ### Comprobaciones de la fase 6
 

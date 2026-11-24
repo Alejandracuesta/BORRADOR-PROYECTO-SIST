@@ -16,13 +16,15 @@ public class PartidasController : ControllerBase
 {
     private readonly QuizArenaDbContext db;
     private readonly CoordinadorSalas coordinador;
+    private readonly NotificadorTiempoReal notificador;
 
     public PartidasController(
         QuizArenaDbContext contexto,
-        CoordinadorSalas coordinadorSalas)
+        CoordinadorSalas coordinadorSalas, NotificadorTiempoReal notificadorTiempoReal)
     {
         db = contexto;
         coordinador = coordinadorSalas;
+        notificador = notificadorTiempoReal;
     }
 
     private int? JugadorActual()
@@ -171,6 +173,8 @@ public class PartidasController : ControllerBase
 
             await db.SaveChangesAsync(ct);
 
+            await notificador.SalaAsync(sala.Codigo, ct);
+            await notificador.PartidaAsync(sala.Codigo, ct);
             return Ok(new
             {
                 mensaje = "Partida iniciada",
@@ -212,8 +216,11 @@ public class PartidasController : ControllerBase
                     mensaje = "Todavía no hay una partida iniciada"
                 });
 
-            await MotorPartidas.AvanzarAsync(db, partida, ct);
-
+            if (await MotorPartidas.AvanzarAsync(db, partida, ct))
+            {
+                await notificador.PartidaAsync(partida.Sala.Codigo, ct);
+                await notificador.SalaAsync(partida.Sala.Codigo, ct);
+            }
             return Ok(Convertir(partida, jugadorId));
         }
         finally
@@ -358,6 +365,7 @@ public class PartidasController : ControllerBase
 
             // Si respondió el último jugador, cerrar la ronda.
             await MotorPartidas.AvanzarAsync(db, partida, ct);
+            await notificador.PartidaAsync(partida.Sala.Codigo, ct);
 
             return Ok(new
             {
@@ -400,7 +408,7 @@ public class PartidasController : ControllerBase
                 .ThenInclude(e => e.Miembros)
                     .ThenInclude(m => m.Jugador)
             .AsSplitQuery()
-            .SingleOrDefaultAsync(p => p.SalaId == salaId, ct);
+            .Where(p => p.SalaId == salaId).OrderByDescending(p => p.Id).FirstOrDefaultAsync(ct);
     }
 
     private static EstadoPartidaDto Convertir(

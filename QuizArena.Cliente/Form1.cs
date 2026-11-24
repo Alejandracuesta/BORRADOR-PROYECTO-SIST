@@ -7,17 +7,8 @@ namespace QuizArena.Cliente;
 public partial class Form1 : Form
 {
     // Cada formulario conserva su propia sesión, incluso dentro del mismo proceso.
-    private readonly HttpClient httpClient = new(
-        new HttpClientHandler
-        {
-            UseCookies = true,
-            CookieContainer = new CookieContainer(),
-            AllowAutoRedirect = false
-        })
-    {
-        BaseAddress = new Uri("http://localhost:5080/"),
-        Timeout = TimeSpan.FromSeconds(5)
-    };
+    private readonly CookieContainer cookies = new();
+    private readonly HttpClient httpClient;
 
     private readonly CancellationTokenSource cierreFormulario = new();
     private PerfilJugador? jugadorActual;
@@ -29,6 +20,16 @@ public partial class Form1 : Form
     public Form1()
     {
         InitializeComponent();
+        httpClient = new HttpClient(new HttpClientHandler
+{
+    UseCookies = true,
+    CookieContainer = cookies,
+    AllowAutoRedirect = false
+})
+{
+    BaseAddress = new Uri("http://localhost:5080/"),
+    Timeout = TimeSpan.FromSeconds(5)
+};
 
         btnRegistrar.Click += btnRegistrar_Click;
         btnEntrar.Click += btnEntrar_Click;
@@ -183,7 +184,7 @@ public partial class Form1 : Form
     private void btnSalas_Click(object? sender, EventArgs e)
     {
         if (!PuedeActualizar || solicitudEnCurso || jugadorActual is null) return;
-        using var ventanaSalas = new SalasForm(httpClient, jugadorActual.Id);
+        using var ventanaSalas = new SalasForm(httpClient, jugadorActual.Id, cookies);
         if (ventanaSalas.ShowDialog(this) == DialogResult.Abort && PuedeActualizar)
         {
             CerrarSesionLocal();

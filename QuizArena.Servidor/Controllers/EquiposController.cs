@@ -16,13 +16,15 @@ public class EquiposController : ControllerBase
 {
     private readonly QuizArenaDbContext db;
     private readonly CoordinadorSalas coordinador;
+    private readonly NotificadorTiempoReal notificador;
 
     public EquiposController(
         QuizArenaDbContext contexto,
-        CoordinadorSalas coordinadorSalas)
+        CoordinadorSalas coordinadorSalas, NotificadorTiempoReal notificadorTiempoReal)
     {
         db = contexto;
         coordinador = coordinadorSalas;
+        notificador = notificadorTiempoReal;
     }
 
     private int? JugadorActual()
@@ -101,6 +103,7 @@ public class EquiposController : ControllerBase
             voto.FechaUtc = ahora;
 
             await db.SaveChangesAsync(ct);
+            await notificador.VotosEquipoAsync(equipo.Id, ct);
 
             return Ok(new
             {
@@ -173,6 +176,7 @@ public class EquiposController : ControllerBase
 
             await MotorPartidas.AvanzarAsync(db, partida, ct);
 
+            await notificador.PartidaAsync(partida.Sala.Codigo, ct);
             return Ok(new { mensaje = "Respuesta del equipo confirmada" });
         }
         finally
@@ -209,6 +213,6 @@ public class EquiposController : ControllerBase
             .Include(p => p.Equipos)
                 .ThenInclude(e => e.Miembros)
             .AsSplitQuery()
-            .SingleOrDefaultAsync(p => p.SalaId == salaId.Value, ct);
+            .Where(p => p.SalaId == salaId.Value).OrderByDescending(p => p.Id).FirstOrDefaultAsync(ct);
     }
 }

@@ -91,7 +91,7 @@ public static class MotorPartidas
     }
 
     // Comprueba y ejecuta las transiciones pendientes.
-    public static async Task AvanzarAsync(
+    public static async Task<bool> AvanzarAsync(
         QuizArenaDbContext db,
         Partida partida,
         CancellationToken ct = default)
@@ -227,5 +227,6 @@ public static class MotorPartidas
 
         if (hayCambios)
             await db.SaveChangesAsync(ct);
+        return hayCambios;
     }
 }

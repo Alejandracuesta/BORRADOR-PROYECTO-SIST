@@ -38,6 +38,8 @@ public class QuizArenaDbContext : DbContext
     public DbSet<RespuestaEquipo> RespuestasEquipo
         => Set<RespuestaEquipo>();
 
+    public DbSet<MensajeSala> MensajesSala => Set<MensajeSala>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -174,7 +176,7 @@ public class QuizArenaDbContext : DbContext
         // PARTIDAS
         var partida = modelBuilder.Entity<Partida>();
 
-        partida.HasIndex(p => p.SalaId).IsUnique();
+        partida.HasIndex(p => p.SalaId);
 
         partida.HasOne(p => p.Sala)
             .WithMany()
@@ -342,6 +344,34 @@ public class QuizArenaDbContext : DbContext
             r.PartidaPreguntaId,
             r.EquipoPartidaId
         }).IsUnique();
+
+var mensaje = modelBuilder.Entity<MensajeSala>();
+
+mensaje.Property(m => m.Texto)
+    .IsRequired()
+    .HasMaxLength(250);
+
+mensaje.HasOne(m => m.Sala)
+    .WithMany()
+    .HasForeignKey(m => m.SalaId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+mensaje.HasOne(m => m.Jugador)
+    .WithMany()
+    .HasForeignKey(m => m.JugadorId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+mensaje.HasOne(m => m.Equipo)
+    .WithMany()
+    .HasForeignKey(m => m.EquipoPartidaId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+mensaje.Property(m => m.FechaUtc)
+    .HasConversion(
+        f => f,
+        f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
+
+mensaje.HasIndex(m => new { m.SalaId, m.Id });
 
         voto.Property(v => v.FechaUtc).HasConversion(
             f => f, f => DateTime.SpecifyKind(f, DateTimeKind.Utc));

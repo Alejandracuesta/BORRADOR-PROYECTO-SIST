@@ -17,13 +17,15 @@ public class SalasController : ControllerBase
 {
     private readonly QuizArenaDbContext db;
     private readonly CoordinadorSalas coordinador;
+    private readonly NotificadorTiempoReal notificador;
 
     public SalasController(
         QuizArenaDbContext contexto,
-        CoordinadorSalas coordinadorSalas)
+        CoordinadorSalas coordinadorSalas, NotificadorTiempoReal notificadorTiempoReal)
     {
         db = contexto;
         coordinador = coordinadorSalas;
+        notificador = notificadorTiempoReal;
     }
 
     private int? JugadorActual()
@@ -180,6 +182,7 @@ public class SalasController : ControllerBase
 
             var guardada = await CargarSalaAsync(sala.Codigo, ct);
 
+            await notificador.SalaAsync(sala.Codigo, ct);
             return CreatedAtAction(
                 nameof(Detalle),
                 new { codigo = sala.Codigo },
@@ -245,6 +248,7 @@ public class SalasController : ControllerBase
             });
 
             await db.SaveChangesAsync(ct);
+            await notificador.SalaAsync(codigo, ct);
 
             var actualizada = await CargarSalaAsync(codigo, ct);
 
@@ -292,6 +296,7 @@ public class SalasController : ControllerBase
 
             participante.Preparado = datos.Preparado;
             await db.SaveChangesAsync(ct);
+            await notificador.SalaAsync(codigo, ct);
 
             return Ok(new
             {
@@ -366,6 +371,7 @@ public class SalasController : ControllerBase
                 participante.Preparado = false;
 
             await db.SaveChangesAsync(ct);
+            await notificador.SalaAsync(codigo, ct);
 
             var actualizada = await CargarSalaAsync(codigo, ct);
 
@@ -415,11 +421,14 @@ public class SalasController : ControllerBase
 
             if (sala.Participantes.Count == 1)
             {
-                if (sala.Estado == EstadoSala.EnEspera)
+                if (sala.Estado == EstadoSala.EnEspera && !await db.Partidas.AnyAsync(p => p.SalaId == sala.Id, ct))
                     db.Salas.Remove(sala);
                 else
-                    // Conservamos la sala finalizada y su historial.
+                {
+                    // La última salida también conserva las partidas de una revancha en espera.
+                    sala.Estado = EstadoSala.Finalizada;
                     db.ParticipantesSala.Remove(participante);
+                }
             }
             else
             {
@@ -438,6 +447,7 @@ public class SalasController : ControllerBase
             }
 
             await db.SaveChangesAsync(ct);
+            await notificador.SalaAsync(codigo, ct);
             return NoContent();
         }
         finally
@@ -504,6 +514,75 @@ public class SalasController : ControllerBase
 
         return null;
     }
+
+
+// POST /api/salas/AB12CD34/revancha
+[HttpPost("{codigo}/revancha")]
+public async Task<IActionResult> Revancha(
+    string codigo, CancellationToken ct)
+{
+    if (JugadorActual() is not int jugadorId)
+        return Unauthorized();
+
+    codigo = codigo.Trim().ToUpperInvariant();
+
+    await coordinador.Semaforo.WaitAsync(ct);
+
+    try
+    {
+        var sala = await db.Salas
+            .Include(s => s.Participantes)
+            .SingleOrDefaultAsync(
+                s => s.Codigo == codigo, ct);
+
+        if (sala == null)
+            return NotFound();
+
+        if (sala.CreadorId != jugadorId ||
+            !sala.Participantes.Any(
+                p => p.JugadorId == jugadorId))
+        {
+            return Forbid();
+        }
+
+        if (sala.Estado != EstadoSala.Finalizada)
+        {
+            return Conflict(new
+            {
+                mensaje = "La partida todavía no ha finalizado"
+            });
+        }
+
+        int minimo = sala.Modalidad == ModalidadSala.Equipos
+            ? 4 : 2;
+
+        if (sala.Participantes.Count < minimo)
+        {
+            return Conflict(new
+            {
+                mensaje = "No hay suficientes jugadores para la revancha"
+            });
+        }
+
+        sala.Estado = EstadoSala.EnEspera;
+
+        foreach (var participante in sala.Participantes)
+            participante.Preparado = false;
+
+        await db.SaveChangesAsync(ct);
+
+        await notificador.SalaAsync(codigo, ct);
+
+        var actualizada = await CargarSalaAsync(codigo, ct);
+
+        return Ok(Convertir(actualizada!));
+    }
+    finally
+    {
+        coordinador.Semaforo.Release();
+    }
+}
+
 
     private async Task<Sala?> CargarSalaAsync(
         string codigo, CancellationToken ct)

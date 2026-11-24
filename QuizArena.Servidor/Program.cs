@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using QuizArena.Servidor.Data;
+using QuizArena.Servidor.Hubs;
 using QuizArena.Servidor.Models;
 using QuizArena.Servidor.Services;
 
@@ -20,6 +21,10 @@ var builder = WebApplication.CreateBuilder(argumentosWeb);
 
 // Registrar los controladores de nuestra API REST.
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificadorTiempoReal>();
+builder.Services.AddSingleton<ControlFrecuencia>();
+builder.Services.AddHostedService<SupervisorPartidas>();
 builder.Services.AddSingleton<CoordinadorSalas>();
 
 // Una única base de datos del servidor, compartida por todos los clientes.
@@ -105,5 +110,6 @@ if (importarPreguntas)
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<SalaHub>("/hubs/salas");
 
 await app.RunAsync();

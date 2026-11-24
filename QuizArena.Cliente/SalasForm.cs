@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using QuizArena.Cliente.Models;
+using QuizArena.Cliente.Services;
 
 namespace QuizArena.Cliente;
 
@@ -10,10 +11,13 @@ public partial class SalasForm : Form
     // El cliente autenticado pertenece a Form1; esta ventana no lo libera.
     private readonly HttpClient api = null!;
     private readonly int jugadorId;
-    private readonly System.Windows.Forms.Timer temporizador = new() { Interval = 2000 };
+    private readonly System.Windows.Forms.Timer temporizador = new() { Interval = 10000 };
     private readonly CancellationTokenSource cierre = new();
     private SalaDetalleApi? salaActual;
     private string? ultimaConfiguracion;
+    private TiempoRealCliente? tiempoReal;
+    private bool refrescoPendiente;
+    private bool reconectando;
     private bool ocupado;
     private bool modificando;
     private bool cerrada;
@@ -31,12 +35,21 @@ public partial class SalasForm : Form
         Disposed += (_, _) => LiberarRecursos();
     }
 
-    public SalasForm(HttpClient cliente, int idJugador) : this()
+    public SalasForm(HttpClient cliente, int idJugador, CookieContainer cookies) : this()
     {
         ArgumentNullException.ThrowIfNull(cliente);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idJugador);
         api = cliente;
         jugadorId = idJugador;
+        tiempoReal = new TiempoRealCliente(api.BaseAddress!, cookies);
+        tiempoReal.SalaActualizada += _ => SolicitarRefresco();
+        tiempoReal.SalasPublicasActualizadas += SolicitarRefresco;
+        tiempoReal.PartidaActualizada += _ => SolicitarRefresco();
+        tiempoReal.ConexionRestaurada += SolicitarRefresco;
+        tiempoReal.ConexionPerdida += SolicitarRefresco;
+        tiempoReal.ConexionRestaurada += MostrarEstadoConexion;
+        tiempoReal.ConexionPerdida += MostrarEstadoConexion;
+        FormClosed += async (_, _) => { await tiempoReal.DisposeAsync(); };
 
         cboModalidad.Items.AddRange(new object[] { "Individual", "Equipos" });
         cboModalidad.SelectedIndex = 0;
@@ -112,13 +125,66 @@ public partial class SalasForm : Form
             string codigo = salaActual.Codigo;
             await EjecutarCambioAsync(ct => api.PostAsync($"api/partidas/{codigo}/iniciar", null, ct));
         };
+        btnRevancha.Click += async (_, _) =>
+{
+    if (salaActual == null)
+        return;
+
+    string codigo = salaActual.Codigo;
+
+    await EjecutarCambioAsync(ct =>
+        api.PostAsync(
+            $"api/salas/{codigo}/revancha", null, ct));
+};
+
+        btnClasificacion.Click += (_, _) =>
+{
+    using var ventana = new ClasificacionForm(api);
+    ventana.ShowDialog(this);
+};
+
+        btnChatSala.Click += (_, _) =>
+        {
+            if (salaActual == null || tiempoReal == null) return;
+            new ChatForm(api, tiempoReal, salaActual.Codigo, salaActual.Modalidad == "Equipos" && salaActual.Estado == "EnPartida").Show(this);
+        };
         btnVerPartida.Click += (_, _) => AbrirVentanaPartida();
-        temporizador.Tick += async (_, _) => await RefrescarAsync(false);
-        Shown += async (_, _) => await RefrescarAsync(true);
+        temporizador.Tick += async (_, _) => { await RecuperarTiempoRealAsync(); await RefrescarAsync(false); };
+        Shown += async (_, _) => { await RecuperarTiempoRealAsync(); await RefrescarAsync(true); };
 
         AjustarAforo();
         MostrarSala(null);
         ActualizarValidacionCodigo();
+    }
+
+    private void MostrarEstadoConexion()
+    {
+        if (!PuedeActualizar || !IsHandleCreated) return;
+        if (InvokeRequired) { try { BeginInvoke(new Action(MostrarEstadoConexion)); } catch (InvalidOperationException) { } return; }
+        lblConexion.Text = tiempoReal?.Conectado == true ? "Tiempo real conectado" : "Sin SignalR: utilizando REST de respaldo";
+    }
+
+    private void SolicitarRefresco()
+    {
+        if (!PuedeActualizar || !IsHandleCreated) return;
+        if (InvokeRequired)
+        {
+            try { BeginInvoke(new Action(SolicitarRefresco)); } catch (InvalidOperationException) { }
+            return;
+        }
+        if (partidaAbierta) return;
+        if (ocupado) { refrescoPendiente = true; return; }
+        _ = RefrescarAsync(false);
+    }
+
+    private async Task RecuperarTiempoRealAsync()
+    {
+        if (reconectando || tiempoReal == null || !PuedeActualizar) return;
+        reconectando = true;
+        try { await tiempoReal.IniciarAsync(cierre.Token); }
+        catch (Exception) when (!cerrada) { lblAviso.Text = "SignalR desconectado. Funcionando por REST."; }
+        catch (OperationCanceledException) { }
+        finally { reconectando = false; MostrarEstadoConexion(); }
     }
 
     private bool CodigoValido()
@@ -150,7 +216,7 @@ public partial class SalasForm : Form
         temporizador.Stop();
         try
         {
-            using var ventana = new PartidaForm(api, jugadorId);
+            using var ventana = new PartidaForm(api, jugadorId, tiempoReal);
             if (ventana.ShowDialog(this) == DialogResult.Abort)
             {
                 DialogResult = DialogResult.Abort;
@@ -266,6 +332,7 @@ public partial class SalasForm : Form
                 // Abrir solo después de completar TODAS las peticiones de la sala;
                 // BeginInvoke dentro de MostrarSala podría adelantarse al await siguiente.
                 ComprobarEntradaAutomatica();
+                if (refrescoPendiente) { refrescoPendiente = false; BeginInvoke(new Action(SolicitarRefresco)); }
             }
         }
     }
@@ -306,6 +373,11 @@ public partial class SalasForm : Form
         }
         if (!PuedeActualizar) return;
 
+        if (tiempoReal != null)
+        {
+            try { await tiempoReal.SincronizarSalaAsync(salaActual?.Codigo, ct: ct); }
+            catch (Exception) when (!cerrada) { /* REST sigue disponible. */ }
+        }
         using var publicas = await api.GetAsync("api/salas/publicas", ct);
         await ComprobarRespuestaAsync(publicas, ct);
         var salas = await publicas.Content.ReadFromJsonAsync<List<SalaPublicaApi>>(cancellationToken: ct) ?? new();
@@ -349,6 +421,16 @@ public partial class SalasForm : Form
         btnIniciarPartida.Enabled = disponible && anfitrion && enEspera && preparados;
         btnVerPartida.Enabled = disponible && enSala && (enPartida || finalizada);
         btnCopiarCodigo.Enabled = enSala;
+        int minimoRevancha =
+    salaActual?.Modalidad == "Equipos" ? 4 : 2;
+
+btnRevancha.Enabled =
+    !ocupado &&
+    salaActual?.Estado == "Finalizada" &&
+    salaActual.CreadorId == jugadorId &&
+    salaActual.Participantes.Count >= minimoRevancha;
+
+        btnChatSala.Enabled = enSala && tiempoReal?.Conectado == true;
         UseWaitCursor = modificando;
     }
 
@@ -367,6 +449,7 @@ public partial class SalasForm : Form
             return;
         }
 
+        if (sala.Estado == "EnEspera") codigoPartidaAbiertaAutomaticamente = null;
         lblSala.Text = $"{sala.Nombre} — Código: {sala.Codigo}";
         foreach (var participante in sala.Participantes)
         {

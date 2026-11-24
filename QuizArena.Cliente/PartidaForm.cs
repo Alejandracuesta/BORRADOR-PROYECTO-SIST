@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using QuizArena.Cliente.Models;
+using QuizArena.Cliente.Services;
 
 namespace QuizArena.Cliente;
 
@@ -15,6 +16,9 @@ public partial class PartidaForm : Form
     private readonly Stopwatch desdeEstado = new();
     private EstadoPartidaApi? estadoActual;
     private TimeSpan restanteAlRecibir;
+    private TiempoRealCliente? tiempoReal;
+    private readonly System.Windows.Forms.Timer sondeoRespaldo = new() { Interval = 10000 };
+    private bool refrescoPendiente;
     private bool ocupado;
     private bool estadoConfirmado;
     private bool cerrada;
@@ -27,25 +31,75 @@ public partial class PartidaForm : Form
         Disposed += (_, _) => LiberarRecursos();
     }
 
-    public PartidaForm(HttpClient cliente, int idJugador) : this()
+    public PartidaForm(HttpClient cliente, int idJugador, TiempoRealCliente? conexionTiempoReal = null) : this()
     {
         ArgumentNullException.ThrowIfNull(cliente);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(idJugador);
         api = cliente;
         jugadorId = idJugador;
+        tiempoReal = conexionTiempoReal;
+        if (tiempoReal != null)
+        {
+            tiempoReal.PartidaActualizada += AlCambiarPartida;
+            tiempoReal.VotosEquipoActualizados += AlCambiarVotos;
+            tiempoReal.ConexionRestaurada += SolicitarEstado;
+            tiempoReal.ConexionPerdida += SolicitarEstado;
+        tiempoReal.ConexionRestaurada += MostrarEstadoConexion;
+        tiempoReal.ConexionPerdida += MostrarEstadoConexion;
+        }
+        sondeoRespaldo.Tick += async (_, _) =>
+        {
+            await RecuperarTiempoRealAsync();
+            await EjecutarAsync(CargarEstadoAsync);
+        };
+        sondeoRespaldo.Start();
         btnA.Click += async (_, _) => await ResponderAsync("A");
         btnB.Click += async (_, _) => await ResponderAsync("B");
         btnC.Click += async (_, _) => await ResponderAsync("C");
         btnD.Click += async (_, _) => await ResponderAsync("D");
         btnConfirmarEquipo.Click += async (_, _) => await ConfirmarEquipoAsync();
-        btnCerrarPartida.Click += (_, _) => Close();
-        temporizador.Tick += async (_, _) =>
+        btnChat.Click += (_, _) =>
         {
-            ActualizarTiempo();
-            await EjecutarAsync(CargarEstadoAsync);
+            if (estadoActual == null || tiempoReal == null) return;
+            new ChatForm(api, tiempoReal, estadoActual.CodigoSala, estadoActual.MiEquipo != null && estadoActual.Fase != "Finalizada").Show(this);
         };
-        Shown += async (_, _) => await EjecutarAsync(CargarEstadoAsync);
+        btnCerrarPartida.Click += (_, _) => Close();
+        temporizador.Tick += (_, _) => ActualizarTiempo();
+        Shown += async (_, _) => { await EjecutarAsync(CargarEstadoAsync); await RecuperarTiempoRealAsync(true); };
         HabilitarRespuestas(false);
+    }
+
+    private void AlCambiarPartida(string codigo) => SolicitarEstado();
+    private void AlCambiarVotos(int equipoId) => SolicitarEstado();
+    private void MostrarEstadoConexion()
+    {
+        if (!PuedeActualizar || !IsHandleCreated) return;
+        if (InvokeRequired) { try { BeginInvoke(new Action(MostrarEstadoConexion)); } catch (InvalidOperationException) { } return; }
+        lblConexion.Text = tiempoReal?.Conectado == true ? "Conectado en tiempo real" : "Sin SignalR: utilizando REST de respaldo";
+    }
+
+    private void SolicitarEstado()
+    {
+        if (!PuedeActualizar || !IsHandleCreated) return;
+        if (InvokeRequired)
+        {
+            try { BeginInvoke(new Action(SolicitarEstado)); } catch (InvalidOperationException) { }
+            return;
+        }
+        if (ocupado) { refrescoPendiente = true; return; }
+        _ = EjecutarAsync(CargarEstadoAsync);
+    }
+    private async Task RecuperarTiempoRealAsync(bool forzar = false)
+    {
+        if (tiempoReal == null || !PuedeActualizar) return;
+        try
+        {
+            await tiempoReal.IniciarAsync(cierre.Token);
+            await tiempoReal.SincronizarSalaAsync(estadoActual?.CodigoSala, forzar, cierre.Token);
+        }
+        catch (Exception) when (!cerrada) { /* El estado se recupera por REST. */ }
+        catch (OperationCanceledException) { }
+        finally { MostrarEstadoConexion(); }
     }
 
     // Consultas y respuestas comparten una única operación; el sondeo no puede
@@ -86,6 +140,7 @@ public partial class PartidaForm : Form
                 ActualizarTiempo();
                 ActualizarPermisos();
                 if (estadoActual?.Fase != "Finalizada") temporizador.Start();
+                if (refrescoPendiente) { refrescoPendiente = false; BeginInvoke(new Action(SolicitarEstado)); }
             }
         }
     }
@@ -168,6 +223,7 @@ public partial class PartidaForm : Form
 
     private void MostrarEstado(EstadoPartidaApi estado)
     {
+        btnChat.Enabled = tiempoReal?.Conectado == true;
         btnConfirmarEquipo.Visible = estado.MiEquipo is not null;
         lblFase.Text = $"Pregunta {estado.NumeroPregunta} de {estado.TotalPreguntas}";
         if (estado.Fase == "CuentaAtras")
@@ -351,6 +407,17 @@ public partial class PartidaForm : Form
     {
         if (cerrada) return;
         cerrada = true;
+        if (tiempoReal != null)
+        {
+            tiempoReal.PartidaActualizada -= AlCambiarPartida;
+            tiempoReal.VotosEquipoActualizados -= AlCambiarVotos;
+            tiempoReal.ConexionRestaurada -= SolicitarEstado;
+            tiempoReal.ConexionPerdida -= SolicitarEstado;
+            tiempoReal.ConexionRestaurada -= MostrarEstadoConexion;
+            tiempoReal.ConexionPerdida -= MostrarEstadoConexion;
+        }
+        sondeoRespaldo.Stop();
+        sondeoRespaldo.Dispose();
         temporizador.Stop();
         temporizador.Dispose();
         cierre.Cancel();

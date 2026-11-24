@@ -23,6 +23,10 @@ partial class PartidaForm
         txtMarcador = new TextBox();
         btnCerrarPartida = new Button();
         btnConfirmarEquipo = new Button();
+        btnChat = new Button { Name = "btnChat", Text = "Abrir chat", Location = new Point(525, 520), Size = new Size(200, 38) };
+        Controls.Add(btnChat);
+        lblConexion = new Label { Name = "lblConexion", Text = "Comprobando comunicación...", Location = new Point(25, 50), Size = new Size(420, 22) };
+        Controls.Add(lblConexion);
         SuspendLayout();
         //
         // lblFase
@@ -169,4 +173,6 @@ partial class PartidaForm
     private TextBox txtMarcador;
     private Button btnCerrarPartida;
     private Button btnConfirmarEquipo;
+    private Button btnChat;
+    private Label lblConexion;
 }
