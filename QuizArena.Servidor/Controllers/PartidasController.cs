@@ -254,8 +254,12 @@ public class PartidasController : ControllerBase
                     mensaje = "La pregunta ya no está activa"
                 });
 
+            // Hora oficial de la respuesta: se usa para el plazo,
+            // la bonificación por velocidad y la fecha guardada.
+            DateTime ahora = DateTime.UtcNow;
+
             // El servidor vuelve a comprobar el tiempo.
-            if (DateTime.UtcNow >= partida.FinFaseUtc)
+            if (ahora >= partida.FinFaseUtc)
             {
                 await MotorPartidas.AvanzarAsync(db, partida, ct);
 
@@ -290,8 +294,12 @@ public class PartidasController : ControllerBase
                 jugador.Racha++;
                 jugador.Aciertos++;
 
-                puntos = MotorPartidas.PuntosBase(
-                    actual.Pregunta.Dificultad);
+                // Cuanto más rápida es la respuesta, más puntos.
+                TimeSpan tiempoRespuesta =
+                    ahora - (actual.AperturaUtc ?? ahora);
+
+                puntos = MotorPartidas.PuntosPorVelocidad(
+                    actual.Pregunta.Dificultad, tiempoRespuesta);
 
                 puntos += MotorPartidas.BonificacionRacha(
                     jugador.Racha);
@@ -310,7 +318,7 @@ public class PartidasController : ControllerBase
                 Opcion = opcion,
                 EsCorrecta = correcta,
                 PuntosGanados = puntos,
-                EnviadaUtc = DateTime.UtcNow
+                EnviadaUtc = ahora
             });
 
             await db.SaveChangesAsync(ct);

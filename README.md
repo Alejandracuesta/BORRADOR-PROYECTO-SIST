@@ -168,11 +168,22 @@ Git. `Datos/preguntas_trivial_100_quizarena.json` contiene las **100 preguntas
 aportadas**, adaptadas al formato del importador sin cambiar sus enunciados,
 opciones ni respuestas correctas.
 
-Las 100 preguntas nuevas tienen dificultad **Media provisional**. Su procedencia
-figura como `Banco trivial 100 aportado` y su licencia como `Pendiente de verificar`.
-El banco adaptado se mantiene local y está excluido de Git mientras se verifica
-su permiso de distribución. Por eso, un clon nuevo necesita disponer de ese
-archivo local para reproducir el banco completo de 112 preguntas.
+Las 100 preguntas son de elaboración propia (`fuente`: `Banco trivial QuizArena`,
+`licencia`: `Propias`), con 10 preguntas por categoría y dificultad real:
+40 fáciles, 40 medias y 20 difíciles. La respuesta correcta está repartida por
+igual entre A, B, C y D (25 veces cada letra).
+
+Cada registro incluye, además del campo `correcta` (A/B/C/D) que usa el
+importador, los campos informativos `respuestaCorrecta` (texto de la opción
+correcta) y `respuestasIncorrectas` (las tres opciones incorrectas). El
+importador los ignora. `Datos/preguntas_trivial_100_quizarena.md` contiene el
+mismo banco en formato legible, con cada opción marcada como `[CORRECTA]` o
+`[INCORRECTA]`.
+
+El archivo sigue listado en `.gitignore`; como las preguntas son propias, puede
+retirarse de esa lista para incluirlo en Git. Mientras siga excluido, un clon
+nuevo necesita disponer de ese archivo local para reproducir el banco completo
+de 112 preguntas.
 
 Con el servidor detenido, abrir una terminal en el proyecto servidor:
 
@@ -398,16 +409,28 @@ servidor. No necesita un servicio en segundo plano. Las fases son:
 3. **Resultados**: cinco segundos con solución, respuestas y puntos de la ronda.
 4. **Finalizada**: clasificación definitiva después de los últimos resultados.
 
-| Dificultad | Plazo | Puntos por acierto |
-| --- | ---: | ---: |
-| Fácil | 20 segundos | 100 |
-| Media | 20 segundos | 200 |
-| Difícil | 30 segundos | 300 |
+| Dificultad | Plazo | Puntos base (respuesta inmediata) | Mínimo (al agotarse el plazo) |
+| --- | ---: | ---: | ---: |
+| Fácil | 20 segundos | 100 | 50 |
+| Media | 20 segundos | 200 | 100 |
+| Difícil | 30 segundos | 300 | 150 |
 
-Los aciertos consecutivos 1–2 no tienen bono, 3–4 añaden 50 puntos por acierto
-y desde el quinto se añaden 100. Fallos y omisiones otorgan cero y reinician la
-racha. Cinco fáciles consecutivas suman **100, 200, 350, 500 y 700** puntos
-acumulados. La clasificación se ordena por puntos descendentes, con nombre como
+**Cuanto más rápida es la respuesta correcta, más puntos.** El servidor mide el
+tiempo entre la apertura oficial de la pregunta (`AperturaUtc`) y la recepción
+de la respuesta, y aplica `MotorPartidas.PuntosPorVelocidad`:
+
+```text
+puntos = round(base × (1 − 0,5 × segundosTranscurridos / plazo))
+```
+
+Por ejemplo, una pregunta media (200 puntos, 20 s) acertada a los 0 s da 200,
+a los 5 s da 175, a los 10 s da 150 y a los 20 s da 100.
+
+La bonificación de racha se suma después, sin depender de la velocidad: los
+aciertos consecutivos 1–2 no tienen bono, 3–4 añaden 50 puntos por acierto y
+desde el quinto se añaden 100. Fallos y omisiones otorgan cero y reinician la
+racha. Cinco fáciles consecutivas respondidas al instante suman **100, 200,
+350, 500 y 700** puntos acumulados. La clasificación se ordena por puntos descendentes, con nombre como
 orden visual para empates; WinForms muestra la misma posición a quienes empatan.
 
 Las operaciones de partidas y salas comparten el `SemaphoreSlim` singleton.
