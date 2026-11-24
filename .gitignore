@@ -17,3 +17,6 @@ TestResults/
 *.db-shm
 *.db-wal
 *.db-journal
+
+# Banco aportado: uso local mientras se verifica su licencia de distribución
+QuizArena.Servidor/Datos/preguntas_trivial_100_quizarena.json

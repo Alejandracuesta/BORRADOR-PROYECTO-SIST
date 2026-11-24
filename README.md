@@ -1,14 +1,13 @@
 # BORRADOR-PROYECTO-SIST
 
-## Quiz Arena — fase 2.2: banco de preguntas de Trivial
+## Quiz Arena — fases 2.3 y 3: banco ampliado y acceso de jugadores
 
-Solución C# con una API REST, una única base de datos SQLite y un cliente WinForms.
-Se pueden abrir varias instancias independientes del cliente en el mismo ordenador;
-todas utilizan el servidor en `http://localhost:5080`.
+Solución C# para Visual Studio 2026 y **.NET 10**, con una API REST en
+`http://localhost:5080`, una base de datos SQLite y varias instancias WinForms.
+Cada ventana puede acceder con una cuenta distinta y mantiene sus propias cookies.
 
-Esta fase incorpora categorías, preguntas, dificultades e importación local de un
-banco JSON. El cliente conserva las funciones de conexión de la fase 1. Todavía no
-se implementan la pantalla de acceso, las partidas ni SignalR.
+La fase 2.3 incorpora 100 preguntas al banco inicial de 12. La fase 3 añade
+registro con contraseña, inicio de sesión, consulta del perfil y cierre de sesión.
 
 ```text
 QuizArena.sln
@@ -18,7 +17,8 @@ QuizArena.sln
 │   │   ├── EstadoController.cs
 │   │   ├── JugadoresController.cs
 │   │   ├── CategoriasController.cs
-│   │   └── PreguntasController.cs
+│   │   ├── PreguntasController.cs
+│   │   └── AccesoController.cs
 │   ├── Data/
 │   │   ├── QuizArenaDbContext.cs
 │   │   └── ImportadorPreguntas.cs
@@ -30,233 +30,275 @@ QuizArena.sln
 │   ├── DTOs/
 │   │   ├── CrearJugadorDto.cs
 │   │   ├── JugadorRespuestaDto.cs
+│   │   ├── CredencialesDto.cs
 │   │   ├── PreguntaImportacionDto.cs
 │   │   └── PreguntaPublicaDto.cs
-│   ├── Datos/preguntas.json
+│   ├── Datos/
+│   │   ├── preguntas.json
+│   │   └── preguntas_trivial_100_quizarena.json   Solo local, excluido de Git
 │   ├── Migrations/
 │   └── Properties/launchSettings.json
-└── QuizArena.Cliente    Windows Forms, sin cambios en esta fase
+└── QuizArena.Cliente
+    ├── Program.cs
+    ├── PerfilJugador.cs
+    ├── Form1.cs
+    ├── Form1.Designer.cs
+    └── Form1.resx
 ```
 
-Se utiliza **.NET 10** con Visual Studio 2026. El servidor mantiene únicamente las
-referencias directas a `Microsoft.EntityFrameworkCore.Sqlite` y
-`Microsoft.EntityFrameworkCore.Tools`, ambas en la versión **10.0.14**. La lectura
-del JSON utiliza `System.Text.Json`, incluido en .NET; no requiere otro paquete.
+El servidor mantiene las referencias directas a
+`Microsoft.EntityFrameworkCore.Sqlite` y `Microsoft.EntityFrameworkCore.Tools`,
+ambas en la versión **10.0.14**. La autenticación por cookies, `PasswordHasher` y
+`System.Text.Json` están disponibles con los componentes de ASP.NET Core y .NET
+utilizados por la solución; esta fase no necesita paquetes adicionales.
 
 ### Arquitectura y relaciones
 
-Los dos proyectos son ejecutables independientes dentro de la misma solución y se
-comunican por HTTP. El cliente comprueba el servidor mediante
-`GET http://localhost:5080/api/estado` y no tiene una referencia al ensamblado del
-servidor.
+Los dos proyectos son aplicaciones independientes de la misma solución y se
+comunican por HTTP. El cliente no tiene una referencia al ensamblado del servidor.
+Los controladores reciben `QuizArenaDbContext` mediante inyección de dependencias;
+el contexto contiene `Jugadores`, `Categorias` y `Preguntas`.
 
-Los controladores reciben `QuizArenaDbContext` mediante inyección de dependencias.
-El contexto hereda de `DbContext` y contiene los conjuntos `Jugadores`,
-`Categorias` y `Preguntas`.
+- `Jugador` tiene nombre visible, nombre normalizado único, fecha de registro UTC
+  y `PasswordHash` nullable. `PasswordHasher<Jugador>` genera y verifica los hashes.
+- Los jugadores anteriores a esta fase conservan sus registros y tienen
+  `PasswordHash = null`. No pueden iniciar sesión sin credenciales asignadas
+  mediante un procedimiento controlado. Las pruebas de acceso utilizan cuentas
+  nuevas, como CarlosQA, LuciaQA y PabloQA.
+- Una categoría contiene muchas preguntas mediante `Pregunta.CategoriaId`.
+  El borrado de categorías con preguntas está restringido. Los nombres de
+  categorías y los enunciados normalizados tienen índices únicos.
+- Cada pregunta contiene cuatro opciones, dificultad, procedencia, licencia,
+  respuesta correcta interna y estado `Activa`. Las consultas públicas solo
+  incluyen preguntas activas.
 
-- `Jugador` conserva su configuración de la fase 2.1: nombre de 3 a 20 caracteres
-  validado por el DTO, nombre normalizado único y fecha de registro UTC.
-- Una `Categoria` contiene muchas `Pregunta`. `Pregunta.CategoriaId` es la clave
-  externa. El borrado de una categoría con preguntas está restringido.
-- Los nombres normalizados de categorías y los enunciados normalizados de
-  preguntas tienen índices únicos. El importador elimina los espacios exteriores
-  y convierte las claves a mayúsculas para detectar repeticiones.
-- `DificultadPregunta` admite `Facil`, `Media` y `Dificil`, y se almacena como texto.
-- Cada pregunta tiene cuatro opciones, una respuesta correcta interna, procedencia,
-  licencia y un indicador `Activa`. La API consulta únicamente preguntas activas.
+`CredencialesDto` recibe el nombre y la contraseña. El nombre debe tener entre
+**3 y 20 caracteres** y la contraseña entre **6 y 64**. `JugadorRespuestaDto`
+devuelve únicamente `id`, `nombre` y `fechaRegistroUtc`; los hashes y las
+contraseñas no forman parte de las respuestas públicas.
 
-`PreguntaImportacionDto` permite cargar el registro completo desde el JSON local.
-`PreguntaPublicaDto` define los campos que reciben los clientes: `id`, `enunciado`,
-`categoriaId`, `categoria`, `dificultad`, `opcionA`, `opcionB`, `opcionC` y `opcionD`.
-No contiene `respuestaCorrecta` ni `correcta`.
+`PreguntaPublicaDto` devuelve `id`, `enunciado`, `categoriaId`, `categoria`,
+`dificultad` y las cuatro opciones. Excluye `respuestaCorrecta` y `correcta`.
+El importador local utiliza `PreguntaImportacionDto`, que sí contiene la solución.
 
-Los endpoints de lectura son públicos. La exclusión de la solución del DTO evita
-enviarla en esas respuestas; todavía no existe autenticación ni control de acceso
-por jugador. El JSON del repositorio contiene las soluciones para la importación
-local y es accesible a quienes tengan acceso al código fuente.
-
-### Preparar la base de datos desde un clon nuevo
+### Preparar o actualizar SQLite
 
 1. Abrir `QuizArena.sln` y restaurar los paquetes NuGet.
-2. Abrir **Herramientas → Administrador de paquetes NuGet → Consola del
+2. Detener el servidor antes de actualizar una base existente y guardar una copia
+   de seguridad de SQLite.
+3. Abrir **Herramientas → Administrador de paquetes NuGet → Consola del
    Administrador de paquetes** en Visual Studio.
-3. Aplicar las migraciones existentes al proyecto servidor:
+4. Aplicar las migraciones existentes:
 
 ```powershell
 Update-Database -Project QuizArena.Servidor -StartupProject QuizArena.Servidor
 ```
 
-`Migrations` incluye **CreacionInicial**, que crea `Jugadores`, y **BancoPreguntas**,
-que añade `Categorias` y `Preguntas`. El comando aplica las migraciones que falten.
-No hay que volver a ejecutar `Add-Migration CreacionInicial` ni
-`Add-Migration BancoPreguntas` al clonar el repositorio.
+Las migraciones se acumulan en este orden:
 
-La actualización de una base de la fase 2.1 conserva la tabla de jugadores y sus
-datos. Se mantiene la migración inicial. Antes de aplicar una actualización a una
-base existente, detener el servidor y guardar una copia de seguridad de SQLite.
+| Migración | Cambio |
+| --- | --- |
+| `CreacionInicial` | Crea la tabla de jugadores |
+| `BancoPreguntas` | Añade categorías y preguntas |
+| `AccesoJugadores` | Añade `PasswordHash` nullable a los jugadores |
 
-La base de datos se sitúa en `ContentRootPath/quizarena.db`. Con la organización
-actual de este equipo, la ruta es:
+Al actualizar, se conservan los jugadores, categorías y preguntas existentes.
+No hay que eliminar la base ni volver a generar estas migraciones en un clon
+nuevo. El servidor no modifica automáticamente el esquema al arrancar.
+
+El archivo se sitúa en `ContentRootPath/quizarena.db`. En este equipo corresponde a:
 
 ```text
 C:\Users\Juan\Desktop\SIST\QuizArena.Servidor\quizarena.db
 ```
 
-La base de datos y sus archivos auxiliares están excluidos de Git. Las migraciones
-y `Datos/preguntas.json` sí se incluyen para reproducir la estructura y el banco
-inicial. El servidor no aplica migraciones automáticamente al arrancar.
+La base de datos y sus auxiliares se excluyen de Git; las migraciones sí forman
+parte del repositorio. En un clon nuevo las tablas estarán vacías después de
+`Update-Database`: los perfiles y cuentas locales no son datos sembrados.
 
-Después de aplicar las migraciones en un clon nuevo, las tablas están vacías.
-Los perfiles locales Carlos, Lucia y Pablo no son datos sembrados por la migración.
+### Importar los bancos de preguntas
 
-### Importar las preguntas
+`Datos/preguntas.json` conserva las **12 preguntas originales** y se incluye en
+Git. `Datos/preguntas_trivial_100_quizarena.json` contiene las **100 preguntas
+aportadas**, adaptadas al formato del importador sin cambiar sus enunciados,
+opciones ni respuestas correctas.
 
-El banco inicial `QuizArena.Servidor/Datos/preguntas.json` contiene **12 preguntas
-originales de ejemplo**, con cuatro opciones cada una, procedencia y licencia.
-Incluye cuatro categorías: **Ciencia, Geografía, Historia y Tecnología**. Cada
-categoría tiene tres preguntas, una por cada dificultad.
+Las 100 preguntas nuevas tienen dificultad **Media provisional**. Su procedencia
+figura como `Banco trivial 100 aportado` y su licencia como `Pendiente de verificar`.
+El banco adaptado se mantiene local y está excluido de Git mientras se verifica
+su permiso de distribución. Por eso, un clon nuevo necesita disponer de ese
+archivo local para reproducir el banco completo de 112 preguntas.
 
-Con el servidor detenido, abrir una terminal en la carpeta del proyecto servidor:
+Con el servidor detenido, abrir una terminal en el proyecto servidor:
 
 ```powershell
 cd C:\Users\Juan\Desktop\SIST\QuizArena.Servidor
+```
+
+Importar primero el banco inicial:
+
+```powershell
 dotnet run -- --importar-preguntas
 ```
 
-En un banco vacío, la salida esperada es:
-
-```text
-Preguntas nuevas: 12
-Preguntas ya existentes: 0
-Importación terminada.
-```
-
-Al repetir el mismo comando, la salida esperada es:
-
-```text
-Preguntas nuevas: 0
-Preguntas ya existentes: 12
-Importación terminada.
-```
-
-El importador valida categorías, enunciados, dificultad, opciones distintas,
-respuesta correcta, fuente y licencia antes de guardar conjuntamente los cambios.
-Reimportar el mismo banco no duplica los enunciados. Esta operación es de
-mantenimiento local y termina sin iniciar el servidor HTTP. No existe un endpoint
-de importación ni una ruta estática para descargar el JSON.
-
-Si el archivo falta, contiene JSON malformado o incluye registros inválidos,
-el comando muestra un mensaje de error y termina con código de salida 1.
-La validación del banco completo evita guardar una importación parcial.
-
-### Ejecutar desde Visual Studio
-
-1. Abrir `QuizArena.sln` con Visual Studio 2026.
-2. Aplicar las migraciones e importar el banco si todavía no se ha hecho.
-3. Seleccionar **Quiz Arena - Servidor y cliente** en la barra de inicio.
-   El perfil compartido se guarda en `QuizArena.slnLaunch`.
-4. Pulsar **F5** para iniciar ambos proyectos.
-
-El botón **Comprobar conexión** del formulario continúa mostrando el estado del
-servidor y el JSON de la fase 1. Las preguntas se consultan por REST en esta fase.
-
-Si el perfil no aparece, abrir las propiedades de la solución → configurar
-proyectos de inicio → varios proyectos de inicio y establecer **Iniciar** para el
-servidor y el cliente, en ese orden.
-
-También se pueden ejecutar desde dos terminales situadas en la raíz del repositorio:
+El archivo predeterminado sigue siendo `Datos/preguntas.json`. Para importar el
+banco aportado, colocarlo en `Datos` y ejecutar:
 
 ```powershell
-# Primera terminal
+dotnet run -- --importar-preguntas --archivo=preguntas_trivial_100_quizarena.json
+```
+
+`--archivo=` admite únicamente el nombre de un archivo `.json` dentro de `Datos`,
+sin rutas de otras carpetas. La operación valida todo el banco antes de guardar,
+termina sin iniciar HTTP y no dispone de un endpoint público.
+
+Si solo están las 12 preguntas iniciales, la primera importación del nuevo archivo
+produce 100 preguntas nuevas y cero existentes. Al repetirla, produce cero nuevas
+y 100 existentes. Los enunciados normalizados impiden duplicados entre archivos
+y dentro del mismo banco.
+
+Con ambos bancos, el resultado esperado es **112 preguntas y 11 categorías**:
+
+| Categoría | Preguntas |
+| --- | ---: |
+| Arte y literatura | 10 |
+| Ciencia | 13 |
+| Cine y series | 10 |
+| Cultura general | 10 |
+| Deportes | 10 |
+| Geografía | 13 |
+| Historia | 13 |
+| Música | 10 |
+| Naturaleza | 10 |
+| Tecnología | 3 |
+| Tecnología y videojuegos | 10 |
+| **Total** | **112** |
+
+`GET /api/preguntas` devuelve como máximo 50 registros. Para contar el banco
+completo, sumar `totalPreguntas` de `GET /api/categorias`:
+
+```powershell
+$categorias = Invoke-RestMethod -Uri 'http://localhost:5080/api/categorias'
+($categorias | Measure-Object -Property totalPreguntas -Sum).Sum
+```
+
+### Ejecutar y utilizar WinForms
+
+1. Abrir `QuizArena.sln` con Visual Studio 2026.
+2. Aplicar las migraciones e importar los bancos disponibles.
+3. Seleccionar **Quiz Arena - Servidor y cliente** en la barra de inicio.
+4. Pulsar **F5** para iniciar ambas aplicaciones.
+
+El formulario permite escribir nombre y contraseña, **Registrarse**, **Iniciar
+sesión**, **Ver mi perfil**, **Cerrar sesión** y **Comprobar conexión**. La
+contraseña se oculta al escribir. Registrar una cuenta no inicia automáticamente
+la sesión; después se debe utilizar **Iniciar sesión**.
+
+Cada instancia del formulario utiliza su propio `HttpClient`, `HttpClientHandler`
+y `CookieContainer`. La sesión de una ventana no modifica las de otras ventanas.
+El perfil se solicita mediante la cookie de sesión y no mediante un identificador
+de jugador proporcionado por el cliente.
+
+Para probar tres jugadores, mantener un único servidor abierto y ejecutar tres
+veces `QuizArena.Cliente.exe`, situado normalmente en:
+
+```text
+QuizArena.Cliente\bin\Debug\net10.0-windows\
+```
+
+Registrar e iniciar sesión con tres cuentas distintas, por ejemplo CarlosQA,
+LuciaQA y PabloQA, introduciendo una contraseña propia en cada ventana. Consultar
+los perfiles y cerrar una sesión; las otras dos deben seguir funcionando.
+Las contraseñas no se guardan en los archivos del proyecto ni en este documento.
+
+También se pueden ejecutar ambas aplicaciones desde dos terminales en la raíz:
+
+```powershell
 dotnet run --project QuizArena.Servidor --launch-profile http
 ```
 
 ```powershell
-# Segunda terminal
 dotnet run --project QuizArena.Cliente
 ```
 
-Para compilar ambos proyectos:
+Para compilar toda la solución:
 
 ```powershell
 dotnet build QuizArena.sln
 ```
 
-### API disponible
+### API de acceso
 
 | Método | Ruta | Resultado |
 | --- | --- | --- |
-| GET | `/api/estado` | HTTP 200 con el estado del servidor |
-| GET | `/api/jugadores` | HTTP 200 con los perfiles ordenados por Id |
-| GET | `/api/jugadores/{id}` | HTTP 200 con el perfil o HTTP 404 si no existe |
-| POST | `/api/jugadores` | HTTP 201 y Location al crear; HTTP 400 si el nombre es inválido; HTTP 409 si ya existe |
-| GET | `/api/categorias` | HTTP 200 con categorías ordenadas por nombre y su total de preguntas activas |
-| GET | `/api/preguntas` | HTTP 200 con hasta 50 preguntas activas, ordenadas por Id |
-| GET | `/api/preguntas/{id}` | HTTP 200 con una pregunta activa o HTTP 404 si no existe o está inactiva |
-| GET | `/api/preguntas/aleatorias?cantidad=5` | HTTP 200 con cinco preguntas activas distintas |
+| POST | `/api/acceso/registrar` | HTTP 201 con el perfil; HTTP 409 si el nombre ya existe; HTTP 400 para credenciales inválidas |
+| POST | `/api/acceso/entrar` | HTTP 200 con el perfil y cookie de sesión; HTTP 401 si las credenciales no son correctas |
+| GET | `/api/acceso/yo` | HTTP 200 con el perfil de la sesión activa; HTTP 401 sin autenticación |
+| POST | `/api/acceso/salir` | HTTP 204 al cerrar la sesión autenticada; HTTP 401 sin sesión |
 
-El listado y la selección aleatoria admiten los filtros opcionales `categoriaId`
-y `dificultad`. Se deben utilizar los identificadores reales de `/api/categorias`.
+El servidor usa la cookie `QuizArena.Sesion`, marcada `HttpOnly` y `SameSite=Strict`,
+con una vigencia de cuatro horas y renovación deslizante. Las respuestas de
+autorización de la API son HTTP 401/403 y no redirecciones a una página de acceso.
+HTTP se utiliza en el entorno local de esta práctica.
 
-```text
-/api/preguntas?dificultad=Dificil
-/api/preguntas?categoriaId=2
-/api/preguntas?categoriaId=2&dificultad=Media
-/api/preguntas/aleatorias?cantidad=3&dificultad=Media
-```
+`SignOutAsync` envía la eliminación de la cookie al cliente. Después, ese cliente
+deja de presentar su sesión y `/api/acceso/yo` responde HTTP 401. El cierre no
+revoca una copia externa de una cookie ya emitida; esta fase no mantiene un
+registro central de sesiones revocadas.
 
-`cantidad` debe estar entre **1 y 15**. El servidor devuelve HTTP 400 para una
-cantidad fuera de rango o filtros inválidos. Si la selección filtrada no contiene
-suficientes preguntas, devuelve HTTP 409 con el número de preguntas disponibles.
-Una categoría positiva inexistente produce un listado vacío; al solicitar una
-selección aleatoria insuficiente, produce HTTP 409.
+El antiguo `POST /api/jugadores` se mantiene como operación heredada de desarrollo:
+crea perfiles sin contraseña y no se utiliza para registrar cuentas de acceso.
+Las cuentas nuevas deben crearse mediante `/api/acceso/registrar`.
 
-Con el banco inicial, solicitar `cantidad=20` devuelve HTTP 400 y solicitar
-`cantidad=15` devuelve HTTP 409, porque hay doce preguntas. No se repiten preguntas
-dentro de una selección aleatoria. Las solicitudes independientes pueden compartir
-preguntas; el control entre rondas se incorporará con las partidas.
+### API de estado, jugadores y preguntas
 
-Ejemplos de consulta desde PowerShell, con el servidor iniciado:
+| Método | Ruta | Resultado |
+| --- | --- | --- |
+| GET | `/api/estado` | Estado del servidor |
+| GET | `/api/jugadores` | Perfiles ordenados por Id, sin hashes ni contraseñas |
+| GET | `/api/jugadores/{id}` | Perfil público o HTTP 404 |
+| GET | `/api/categorias` | Categorías ordenadas y total de preguntas activas |
+| GET | `/api/preguntas` | Hasta 50 preguntas activas, ordenadas por Id |
+| GET | `/api/preguntas/{id}` | Pregunta activa sin solución o HTTP 404 |
+| GET | `/api/preguntas/aleatorias?cantidad=10` | Diez preguntas activas distintas dentro de la selección |
 
-```powershell
-Invoke-RestMethod -Uri 'http://localhost:5080/api/categorias'
-Invoke-RestMethod -Uri 'http://localhost:5080/api/preguntas'
-Invoke-RestMethod -Uri 'http://localhost:5080/api/preguntas?dificultad=Dificil'
-Invoke-RestMethod -Uri 'http://localhost:5080/api/preguntas/aleatorias?cantidad=5'
-Invoke-RestMethod -Uri 'http://localhost:5080/api/jugadores'
-```
+El listado y las selecciones aleatorias admiten `categoriaId` y `dificultad`
+(`Facil`, `Media` o `Dificil`). Los filtros se pueden combinar. La cantidad
+aleatoria debe estar entre 1 y 15: los parámetros inválidos devuelven HTTP 400
+y una selección sin suficientes preguntas devuelve HTTP 409 con su disponibilidad.
+Las peticiones independientes pueden compartir preguntas.
 
-El registro de jugadores conserva sus reglas: el nombre es obligatorio, tiene
-entre 3 y 20 caracteres y no puede repetirse ignorando mayúsculas y espacios
-exteriores. Los perfiles devueltos contienen `id`, `nombre` y `fechaRegistroUtc`.
+Las consultas generales siguen siendo públicas. El archivo JSON no tiene una
+ruta estática de descarga y las soluciones se reservan para la importación y
+la lógica interna. Las salas, rondas y partidas se incorporarán en fases posteriores.
 
-### Comprobaciones superadas de la fase 2.2
+### Comprobaciones superadas
 
-Se han superado **38 comprobaciones de integración**, con compilación de la
-solución sin errores ni advertencias. Las pruebas que modifican el banco para
-simular errores, inactivación y mayor volumen se realizaron en copias aisladas.
+Validación completada el **24 de noviembre de 2026**: compilación con **0 errores
+y 0 advertencias**, **32 comprobaciones de API y datos** superadas y pruebas
+reales con tres ventanas WinForms. Después de reiniciar Visual Studio y el
+servidor, se conservan las 112 preguntas, las 11 categorías y los seis perfiles
+locales, y las cuentas con contraseña pueden volver a iniciar sesión.
 
-- La solución compila sin errores y conserva las funciones de las fases 1 y 2.1.
-- `BancoPreguntas` se aplica después de `CreacionInicial` sin borrar los jugadores.
-- La primera importación inserta doce preguntas y cuatro categorías.
-- La segunda importación detecta las doce preguntas existentes sin duplicarlas.
-- `/api/categorias` devuelve las cuatro categorías con tres preguntas activas cada una.
-- `/api/preguntas` devuelve doce preguntas; cada dificultad devuelve cuatro.
-- Los filtros por categoría y dificultad funcionan por separado y combinados.
-- Cada selección aleatoria devuelve la cantidad solicitada con identificadores distintos.
-- Las cantidades y filtros inválidos devuelven HTTP 400; una selección insuficiente,
-  HTTP 409; una pregunta inexistente o inactiva, HTTP 404.
-- Ninguna respuesta de preguntas incluye `respuestaCorrecta` ni `correcta`.
-- El JSON no se puede descargar mediante una ruta estática y no hay endpoint de importación.
-- Un banco inválido o JSON malformado se rechaza sin altas parciales.
-- Las preguntas inactivas se excluyen de consultas, selecciones y recuentos.
-- La importación detecta duplicados dentro del mismo archivo y el listado
-  conserva el límite de 50 con un banco de mayor tamaño.
-- Carlos, Lucia y Pablo se conservan; categorías, preguntas y jugadores persisten
-  después de detener y reiniciar el servidor.
-- Git incluye las migraciones y el JSON, y excluye la base de datos local.
+En WinForms se verificaron registro correcto, nombre duplicado, contraseña
+incorrecta, acceso correcto, consulta del perfil y cierre de sesión. Las ventanas
+de CarlosQA, LuciaQA y PabloQA mostraron identidades distintas; tras cerrar la
+sesión de CarlosQA, las otras dos siguieron consultando sus propios perfiles.
 
-La aplicación de migraciones sigue la
-[documentación de EF Core para Visual Studio](https://learn.microsoft.com/en-us/ef/core/cli/powershell).
-El perfil de inicio compartido sigue la
-[documentación de Microsoft](https://learn.microsoft.com/es-es/visualstudio/ide/how-to-set-multiple-startup-projects?view=visualstudio).
+- Solución compilada sin errores y migración `AccesoJugadores` aplicada.
+- Incorporación de 100 preguntas sin perder las 12 ni los jugadores anteriores.
+- Reimportación sin duplicados; 112 preguntas y 11 categorías al disponer de ambos bancos.
+- Registro HTTP 201, nombres duplicados HTTP 409 y validación de credenciales HTTP 400.
+- Inicio de sesión correcto HTTP 200; credenciales incorrectas o perfiles antiguos sin contraseña HTTP 401.
+- Perfil de sesión HTTP 200 y perfil sin autenticación HTTP 401.
+- Cierre de sesión HTTP 204 seguido de perfil HTTP 401 en ese cliente.
+- Tres instancias WinForms con identidades independientes y cierre de una sin afectar a las demás.
+- Botón de conexión, consultas y filtros anteriores operativos.
+- Persistencia de perfiles y banco tras reiniciar el servidor.
+- Respuestas públicas sin hashes, contraseñas ni soluciones de las preguntas.
+- Migraciones y código disponibles para Git; SQLite y el banco aportado de licencia pendiente excluidos.
+
+La configuración de acceso utiliza la
+[autenticación por cookies de ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0).
+Las migraciones se aplican con las
+[herramientas de EF Core para Visual Studio](https://learn.microsoft.com/en-us/ef/core/cli/powershell).

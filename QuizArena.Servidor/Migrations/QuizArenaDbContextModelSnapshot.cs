@@ -60,6 +60,9 @@ namespace QuizArena.Servidor.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NombreNormalizado")
