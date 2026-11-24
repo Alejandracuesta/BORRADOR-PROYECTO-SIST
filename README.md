@@ -469,6 +469,37 @@ Cerrar la pantalla durante el juego no abandona ni pausa la partida. Se puede
 volver a entrar desde la sala con el tiempo que quede. En esta fase no se inicia
 el modo equipos, no hay revancha y no se incorpora SignalR.
 
+### Comprobaciones de la fase 5
+
+Validación realizada el **24 de noviembre de 2026**:
+
+- Compilación con **0 errores y 0 advertencias**; sin paquetes NuGet nuevos.
+- Migración `MotorPartidasIndividuales` aplicada y modelo EF sin cambios pendientes.
+- **47 comprobaciones de API**: autenticación, permisos, preparación, inicios y
+  respuestas simultáneas, duplicados, plazos, preguntas distintas, omisiones,
+  rachas, solución oculta, clasificación y conservación del historial.
+- **30 pruebas aisladas del motor con SQLite**: duraciones y puntuaciones de las
+  tres dificultades, cinco fáciles con 700 puntos, fallo que rompe la racha,
+  empate, recuperación de todas las fases vencidas e idempotencia del final.
+  Las preguntas sintéticas de estas pruebas solo existen en una base temporal;
+  no se modifica el banco de la aplicación.
+- **4 comprobaciones tras reiniciar el servidor**: misma partida, avance de los
+  plazos vencidos, respuesta/puntos conservados y salida tras finalizar.
+- **67 comprobaciones de regresión**: 35 de salas y 32 de acceso, perfiles y banco.
+- Tres clientes WinForms con CarlosQA, LuciaQA y PabloQA muestran preguntas,
+  resultados y clasificación común con la marca de identidad `[TÚ]` en cada uno.
+  Se verificaron permisos de inicio, bloqueo tras responder y vuelta a la sala.
+- El marcador final de la prueba nativa fue CarlosQA 200, LuciaQA 100 y PabloQA 0;
+  persistió al cerrar y abrir el cliente. Los tres pudieron abandonar y CarlosQA
+  pudo crear otra sala. Las salas temporales en espera se retiraron; los
+  historiales finalizados se conservan.
+- Revisados el tamaño del marcador y los botones con el escalado del equipo.
+  Los jugadores, hashes, categorías y preguntas anteriores se conservan.
+
+En total se superaron **148 comprobaciones automatizadas**, además de las
+pruebas nativas. Las cuentas y partidas añadidas posteriormente por el usuario
+se mantienen; los seis perfiles previos no se sobrescriben.
+
 ### Comprobaciones de la fase 4
 
 Validación realizada el **24 de noviembre de 2026**:
