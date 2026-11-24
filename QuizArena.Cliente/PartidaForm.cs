@@ -37,6 +37,7 @@ public partial class PartidaForm : Form
         btnB.Click += async (_, _) => await ResponderAsync("B");
         btnC.Click += async (_, _) => await ResponderAsync("C");
         btnD.Click += async (_, _) => await ResponderAsync("D");
+        btnConfirmarEquipo.Click += async (_, _) => await ConfirmarEquipoAsync();
         btnCerrarPartida.Click += (_, _) => Close();
         temporizador.Tick += async (_, _) =>
         {
@@ -54,7 +55,7 @@ public partial class PartidaForm : Form
         if (!PuedeActualizar || ocupado) return;
         ocupado = true;
         temporizador.Stop();
-        HabilitarRespuestas(false);
+        ActualizarPermisos();
         try
         {
             await operacion(cierre.Token);
@@ -114,7 +115,9 @@ public partial class PartidaForm : Form
         return EjecutarAsync(async ct =>
         {
             estadoConfirmado = false;
-            using var respuesta = await api.PostAsJsonAsync("api/partidas/responder", new { preguntaId, opcion }, ct);
+            string ruta = estadoActual?.MiEquipo is not null
+                ? "api/partidas/equipos/votar" : "api/partidas/responder";
+            using var respuesta = await api.PostAsJsonAsync(ruta, new { preguntaId, opcion }, ct);
             if (respuesta.StatusCode == HttpStatusCode.Conflict)
             {
                 // El servidor puede haber cerrado la ronda o recibido un envío
@@ -127,8 +130,45 @@ public partial class PartidaForm : Form
         });
     }
 
+    private Task ConfirmarEquipoAsync()
+    {
+        if (!PuedeResponder() || estadoActual?.MiEquipo is not
+            {
+                HayUnanimidad: true,
+                Confirmada: false
+            } ||
+            estadoActual.Pregunta == null ||
+            estadoActual.Fase != "Pregunta")
+        {
+            return Task.CompletedTask;
+        }
+
+        int preguntaId = estadoActual.Pregunta.Id;
+
+        return EjecutarAsync(async ct =>
+        {
+            estadoConfirmado = false;
+
+            using var respuesta = await api.PostAsJsonAsync(
+                "api/partidas/equipos/confirmar",
+                new { preguntaId },
+                ct);
+
+            if (respuesta.StatusCode == HttpStatusCode.Conflict)
+            {
+                // Otro miembro pudo cambiar el voto o confirmar.
+                await CargarEstadoAsync(ct);
+                return;
+            }
+
+            await ComprobarRespuestaAsync(respuesta, ct);
+            await CargarEstadoAsync(ct);
+        });
+    }
+
     private void MostrarEstado(EstadoPartidaApi estado)
     {
+        btnConfirmarEquipo.Visible = estado.MiEquipo is not null;
         lblFase.Text = $"Pregunta {estado.NumeroPregunta} de {estado.TotalPreguntas}";
         if (estado.Fase == "CuentaAtras")
         {
@@ -151,9 +191,16 @@ public partial class PartidaForm : Form
             btnB.Text = $"B. {p.OpcionB}";
             btnC.Text = $"C. {p.OpcionC}";
             btnD.Text = $"D. {p.OpcionD}";
-            lblInfo.Text = estado.Fase == "Resultados"
-                ? $"Respuesta correcta: {estado.Resultado?.RespuestaCorrecta ?? "?"}. Resultados de la ronda."
-                : estado.MiRespuesta is null
+            if (estado.Fase == "Resultados")
+                lblInfo.Text = $"Respuesta correcta: {estado.Resultado?.RespuestaCorrecta ?? "?"}";
+            else if (estado.MiEquipo is { } equipo)
+                lblInfo.Text = equipo.Confirmada
+                    ? "La respuesta del equipo ya está confirmada."
+                    : equipo.HayUnanimidad
+                        ? "Hay unanimidad. Puedes confirmar la respuesta."
+                        : "Vota y observa las elecciones de tus compañeros.";
+            else
+                lblInfo.Text = estado.MiRespuesta is null
                     ? "Selecciona una respuesta antes de que termine el tiempo."
                     : $"Respuesta enviada: {estado.MiRespuesta}. Esperando al resto de jugadores.";
         }
@@ -163,6 +210,41 @@ public partial class PartidaForm : Form
 
     private void MostrarMarcador(EstadoPartidaApi estado)
     {
+        if (estado.MiEquipo is { } equipo)
+        {
+            var lineasEquipo = new List<string> { $"TU EQUIPO: {equipo.Nombre}", "" };
+            foreach (var voto in equipo.Votos)
+            {
+                string yo = voto.JugadorId == jugadorId ? " [TÚ]" : "";
+                lineasEquipo.Add($"{voto.Nombre}{yo}: {voto.Opcion ?? "Sin votar"}");
+            }
+            lineasEquipo.Add("");
+            lineasEquipo.Add(equipo.Confirmada ? "Respuesta definitiva confirmada"
+                : equipo.HayUnanimidad ? "Unanimidad alcanzada" : "Esperando consenso");
+            if (estado.Fase == "Resultados")
+            {
+                lineasEquipo.Add("");
+                lineasEquipo.Add("RESULTADO DE LA RONDA");
+                foreach (var r in estado.ResultadosEquipos ?? new())
+                    lineasEquipo.Add($"{r.Nombre}: {r.Opcion ?? "Sin respuesta"} (+{r.PuntosGanados})");
+            }
+            lineasEquipo.Add("");
+            lineasEquipo.Add(estado.Fase == "Finalizada" ? "CLASIFICACIÓN FINAL DE EQUIPOS" : "CLASIFICACIÓN DE EQUIPOS");
+            int posicionEquipo = 0;
+            int? puntosPrevios = null;
+            int indice = 0;
+            foreach (var marcador in estado.MarcadorEquipos ?? new())
+            {
+                if (puntosPrevios != marcador.Puntos) posicionEquipo = indice + 1;
+                puntosPrevios = marcador.Puntos;
+                indice++;
+                lineasEquipo.Add($"{posicionEquipo}. {marcador.Nombre}: {marcador.Puntos} puntos · " +
+                    $"{marcador.Aciertos} aciertos · racha {marcador.Racha}");
+            }
+            string textoEquipos = string.Join(Environment.NewLine, lineasEquipo);
+            if (txtMarcador.Text != textoEquipos) txtMarcador.Text = textoEquipos;
+            return;
+        }
         var lineas = new List<string>();
         if (estado.Fase == "Resultados" && estado.Resultado is { } resultado)
         {
@@ -201,10 +283,49 @@ public partial class PartidaForm : Form
         ActualizarPermisos();
     }
 
-    private bool PuedeResponder() => PuedeActualizar && !ocupado && estadoConfirmado &&
-        estadoActual is { Fase: "Pregunta", Pregunta: not null, MiRespuesta: null, FinFaseUtc: not null } &&
-        TiempoRestante > TimeSpan.Zero;
-    private void ActualizarPermisos() => HabilitarRespuestas(PuedeResponder());
+    private bool PuedeResponder()
+    {
+        if (!PuedeActualizar ||
+            ocupado ||
+            !estadoConfirmado ||
+            estadoActual is not
+            {
+                Fase: "Pregunta",
+                Pregunta: not null,
+                FinFaseUtc: not null
+            } ||
+            TiempoRestante <= TimeSpan.Zero)
+        {
+            return false;
+        }
+
+        // En equipos se puede cambiar de voto hasta confirmar.
+        if (estadoActual.MiEquipo is { } equipo)
+            return !equipo.Confirmada;
+
+        // En individual solamente se responde una vez.
+        return estadoActual.MiRespuesta == null;
+    }
+
+    private void ActualizarPermisos()
+    {
+        HabilitarRespuestas(PuedeResponder());
+
+        if (!PuedeActualizar)
+            return;
+
+        btnConfirmarEquipo.Enabled =
+            !ocupado &&
+            estadoConfirmado &&
+            estadoActual?.Fase == "Pregunta" &&
+            estadoActual.MiEquipo is
+            {
+                HayUnanimidad: true,
+                Confirmada: false
+            } &&
+            TiempoRestante > TimeSpan.Zero;
+    }
+
     private void HabilitarRespuestas(bool habilitar)
     {
         if (!PuedeActualizar) return;

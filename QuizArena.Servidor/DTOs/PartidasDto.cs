@@ -53,5 +53,38 @@ public record EstadoPartidaDto(
     PreguntaJuegoDto? Pregunta,
     string? MiRespuesta,
     ResultadoRondaDto? Resultado,
-    List<MarcadorJugadorDto> Marcador
+    List<MarcadorJugadorDto> Marcador,
+    EquipoActualDto? MiEquipo,
+    List<MarcadorEquipoDto>? MarcadorEquipos,
+    List<ResultadoEquipoDto>? ResultadosEquipos
+);
+
+public record VotoMiembroEquipoDto(
+    int JugadorId,
+    string Nombre,
+    string? Opcion
+);
+
+public record EquipoActualDto(
+    int Id,
+    string Nombre,
+    bool HayUnanimidad,
+    bool Confirmada,
+    List<VotoMiembroEquipoDto> Votos
+);
+
+public record MarcadorEquipoDto(
+    int EquipoId,
+    string Nombre,
+    int Puntos,
+    int Aciertos,
+    int Racha
+);
+
+public record ResultadoEquipoDto(
+    int EquipoId,
+    string Nombre,
+    string? Opcion,
+    bool EsCorrecta,
+    int PuntosGanados
 );

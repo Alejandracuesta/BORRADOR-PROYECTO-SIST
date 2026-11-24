@@ -20,4 +20,6 @@ public class Partida
     public List<PartidaPregunta> Preguntas { get; set; } = new();
 
     public List<PartidaJugador> Jugadores { get; set; } = new();
+
+    public List<EquipoPartida> Equipos { get; set; } = new();
 }

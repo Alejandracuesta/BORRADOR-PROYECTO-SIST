@@ -18,6 +18,9 @@ public partial class SalasForm : Form
     private bool modificando;
     private bool cerrada;
     private bool categoriasCargadas;
+    private bool partidaAbierta;
+    private bool aperturaPartidaPendiente;
+    private string? codigoPartidaAbiertaAutomaticamente;
 
     private bool PuedeActualizar => !cerrada && !IsDisposed && !Disposing;
 
@@ -64,15 +67,28 @@ public partial class SalasForm : Form
             if (lstPublicas.SelectedItem is SalaPublicaApi sala)
                 await UnirseAsync(sala.Codigo);
         };
-        btnUnirseCodigo.Click += async (_, _) =>
+        btnUnirseCodigo.Click += async (_, _) => await UnirseConCodigoAsync();
+        txtCodigo.TextChanged += (_, _) => ActualizarValidacionCodigo();
+        txtCodigo.KeyDown += async (_, e) =>
         {
-            string codigo = txtCodigo.Text.Trim().ToUpperInvariant();
-            if (codigo.Length != 8)
+            if (e.KeyCode == Keys.Enter)
             {
-                MostrarError("Introduce un código de 8 caracteres.");
-                return;
+                e.SuppressKeyPress = true;
+                await UnirseConCodigoAsync();
             }
-            await UnirseAsync(codigo);
+        };
+        btnCopiarCodigo.Click += (_, _) =>
+        {
+            if (salaActual is null) return;
+            try
+            {
+                Clipboard.SetText(salaActual.Codigo);
+                lblAviso.Text = "Código copiado al portapapeles";
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                lblAviso.Text = "No se pudo acceder al portapapeles";
+            }
         };
         btnPreparado.Click += async (_, _) =>
         {
@@ -96,31 +112,68 @@ public partial class SalasForm : Form
             string codigo = salaActual.Codigo;
             await EjecutarCambioAsync(ct => api.PostAsync($"api/partidas/{codigo}/iniciar", null, ct));
         };
-        btnVerPartida.Click += async (_, _) =>
-        {
-            if (!PuedeActualizar || ocupado || salaActual?.Estado is not ("EnPartida" or "Finalizada")) return;
-            temporizador.Stop();
-            try
-            {
-                using var ventana = new PartidaForm(api, jugadorId);
-                if (ventana.ShowDialog(this) == DialogResult.Abort)
-                {
-                    DialogResult = DialogResult.Abort;
-                    Close();
-                    return;
-                }
-            }
-            finally
-            {
-                if (PuedeActualizar) await RefrescarAsync(true);
-            }
-        };
+        btnVerPartida.Click += (_, _) => AbrirVentanaPartida();
         temporizador.Tick += async (_, _) => await RefrescarAsync(false);
         Shown += async (_, _) => await RefrescarAsync(true);
 
         AjustarAforo();
         MostrarSala(null);
+        ActualizarValidacionCodigo();
+    }
+
+    private bool CodigoValido()
+    {
+        string codigo = txtCodigo.Text.Trim();
+        return codigo.Length == 8 && codigo.All(Uri.IsHexDigit);
+    }
+
+    private void ActualizarValidacionCodigo()
+    {
+        lblCodigoAyuda.Text = CodigoValido()
+            ? "Código válido para intentar conectar"
+            : "Introduce exactamente 8 caracteres (0-9, A-F)";
         ActualizarControles();
+    }
+
+    private Task UnirseConCodigoAsync()
+    {
+        if (!CodigoValido() || salaActual is not null || ocupado || partidaAbierta || !PuedeActualizar)
+            return Task.CompletedTask;
+        return UnirseAsync(txtCodigo.Text.Trim().ToUpperInvariant());
+    }
+
+    private void AbrirVentanaPartida()
+    {
+        if (!PuedeActualizar || ocupado || partidaAbierta || salaActual?.Estado is not ("EnPartida" or "Finalizada")) return;
+        partidaAbierta = true;
+        codigoPartidaAbiertaAutomaticamente = salaActual.Codigo;
+        temporizador.Stop();
+        try
+        {
+            using var ventana = new PartidaForm(api, jugadorId);
+            if (ventana.ShowDialog(this) == DialogResult.Abort)
+            {
+                DialogResult = DialogResult.Abort;
+                Close();
+            }
+        }
+        finally
+        {
+            partidaAbierta = false;
+            if (PuedeActualizar) _ = RefrescarAsync(true);
+        }
+    }
+
+    private void ComprobarEntradaAutomatica()
+    {
+        if (!PuedeActualizar || ocupado || partidaAbierta || aperturaPartidaPendiente ||
+            salaActual?.Estado != "EnPartida" || codigoPartidaAbiertaAutomaticamente == salaActual.Codigo) return;
+        aperturaPartidaPendiente = true;
+        BeginInvoke(new Action(() =>
+        {
+            aperturaPartidaPendiente = false;
+            if (PuedeActualizar && !ocupado && salaActual?.Estado == "EnPartida") AbrirVentanaPartida();
+        }));
     }
 
     private void AjustarAforo()
@@ -168,7 +221,7 @@ public partial class SalasForm : Form
     private async Task EjecutarOperacionAsync(
         Func<CancellationToken, Task> operacion, bool mostrarErrores, bool cambio = false)
     {
-        if (!PuedeActualizar || ocupado) return;
+        if (!PuedeActualizar || ocupado || partidaAbierta) return;
         ocupado = true;
         modificando = cambio;
         temporizador.Stop();
@@ -210,6 +263,9 @@ public partial class SalasForm : Form
             {
                 ActualizarControles();
                 temporizador.Start();
+                // Abrir solo después de completar TODAS las peticiones de la sala;
+                // BeginInvoke dentro de MostrarSala podría adelantarse al await siguiente.
+                ComprobarEntradaAutomatica();
             }
         }
     }
@@ -276,7 +332,8 @@ public partial class SalasForm : Form
         bool anfitrion = salaActual?.CreadorId == jugadorId;
         bool enPartida = salaActual?.Estado == "EnPartida";
         bool finalizada = salaActual?.Estado == "Finalizada";
-        bool preparados = salaActual is not null && salaActual.Participantes.Count >= 2 &&
+        int minimo = salaActual?.Modalidad == "Equipos" ? 4 : 2;
+        bool preparados = salaActual is not null && salaActual.Participantes.Count >= minimo &&
             salaActual.Participantes.All(p => p.Preparado);
         bool disponible = !ocupado;
         // Los sondeos no quitan el foco a los campos que se están editando.
@@ -285,12 +342,13 @@ public partial class SalasForm : Form
         btnGuardarConfig.Enabled = disponible && anfitrion && enEspera;
         btnActualizarSalas.Enabled = disponible;
         btnUnirsePublica.Enabled = disponible && !enSala && lstPublicas.SelectedItem is SalaPublicaApi;
-        btnUnirseCodigo.Enabled = disponible && !enSala;
-        txtCodigo.Enabled = disponible && !enSala;
+        btnUnirseCodigo.Enabled = disponible && !enSala && CodigoValido();
+        txtCodigo.Enabled = !modificando && !enSala;
         btnPreparado.Enabled = disponible && enSala && enEspera;
         btnSalirSala.Enabled = disponible && enSala && !enPartida;
-        btnIniciarPartida.Enabled = disponible && anfitrion && enEspera && preparados && salaActual?.Modalidad == "Individual";
+        btnIniciarPartida.Enabled = disponible && anfitrion && enEspera && preparados;
         btnVerPartida.Enabled = disponible && enSala && (enPartida || finalizada);
+        btnCopiarCodigo.Enabled = enSala;
         UseWaitCursor = modificando;
     }
 
@@ -305,6 +363,7 @@ public partial class SalasForm : Form
             lblEstadoSala.Text = "Crea o busca una sala";
             btnPreparado.Text = "Estoy preparado";
             ultimaConfiguracion = null;
+            codigoPartidaAbiertaAutomaticamente = null;
             return;
         }
 
@@ -323,8 +382,7 @@ public partial class SalasForm : Form
             "EnPartida" => "Partida en curso. Pulsa Entrar en partida.",
             "Finalizada" => "Partida terminada. Puedes consultar los resultados.",
             _ when sala.Participantes.Count >= minimo && sala.Participantes.All(p => p.Preparado)
-                => sala.Modalidad == "Individual" ? "Todos preparados. El anfitrión puede iniciar."
-                    : "Todos preparados. El modo equipos estará disponible más adelante.",
+                => "Todos preparados. El anfitrión puede iniciar.",
             _ => $"Esperando jugadores — {sala.Participantes.Count}/{sala.MaxJugadores}"
         };
 

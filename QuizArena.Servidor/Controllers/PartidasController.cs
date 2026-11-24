@@ -63,17 +63,16 @@ public class PartidasController : ControllerBase
                     mensaje = "La sala ya no está en espera"
                 });
 
-            if (sala.Modalidad != ModalidadSala.Individual)
-                return Conflict(new
-                {
-                    mensaje = "El modo equipos se implementará en la fase 6"
-                });
+            int minimo = sala.Modalidad == ModalidadSala.Equipos
+                ? 4 : 2;
 
-            if (sala.Participantes.Count < 2)
+            if (sala.Participantes.Count < minimo)
+            {
                 return Conflict(new
                 {
-                    mensaje = "Se necesitan al menos dos jugadores"
+                    mensaje = $"Se necesitan al menos {minimo} jugadores"
                 });
+            }
 
             if (sala.Participantes.Any(p => !p.Preparado))
                 return Conflict(new
@@ -130,7 +129,7 @@ public class PartidasController : ControllerBase
                 });
             }
 
-            foreach (var participante in sala.Participantes)
+            foreach (var participante in sala.Participantes.OrderBy(p => p.UnidoUtc).ThenBy(p => p.Id))
             {
                 partida.Jugadores.Add(new PartidaJugador
                 {
@@ -139,6 +138,32 @@ public class PartidasController : ControllerBase
                     Racha = 0,
                     Aciertos = 0
                 });
+            }
+
+            if (sala.Modalidad == ModalidadSala.Equipos)
+            {
+                int cantidadJugadores = partida.Jugadores.Count;
+
+                // Número mínimo de equipos con un máximo de 3 miembros.
+                int numeroEquipos = (cantidadJugadores + 2) / 3;
+
+                var equipos = Enumerable.Range(1, numeroEquipos)
+                    .Select(i => new EquipoPartida
+                    {
+                        Nombre = $"Equipo {i}"
+                    })
+                    .ToList();
+
+                partida.Equipos.AddRange(equipos);
+
+                // Distribución equilibrada y reproducible.
+                for (int i = 0; i < cantidadJugadores; i++)
+                {
+                    int indiceEquipo = i % numeroEquipos;
+
+                    partida.Jugadores[i].Equipo =
+                        equipos[indiceEquipo];
+                }
             }
 
             db.Partidas.Add(partida);
@@ -235,6 +260,14 @@ public class PartidasController : ControllerBase
                 {
                     mensaje = "No hay partida"
                 });
+
+            if (partida.Sala.Modalidad == ModalidadSala.Equipos)
+            {
+                return Conflict(new
+                {
+                    mensaje = "Utiliza la votación por equipos"
+                });
+            }
 
             // Ejecutar primero las transiciones que correspondan.
             await MotorPartidas.AvanzarAsync(db, partida, ct);
@@ -351,6 +384,13 @@ public class PartidasController : ControllerBase
                 .ThenInclude(pp => pp.Respuestas)
             .Include(p => p.Jugadores)
                 .ThenInclude(pj => pj.Jugador)
+            .Include(p => p.Preguntas)
+                .ThenInclude(pp => pp.VotosEquipo)
+            .Include(p => p.Preguntas)
+                .ThenInclude(pp => pp.RespuestasEquipo)
+            .Include(p => p.Equipos)
+                .ThenInclude(e => e.Miembros)
+                    .ThenInclude(m => m.Jugador)
             .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.SalaId == salaId, ct);
     }
@@ -381,11 +421,20 @@ public class PartidasController : ControllerBase
             .FirstOrDefault(r => r.JugadorId == jugadorId)?
             .Opcion;
 
+        if (partida.Sala.Modalidad == ModalidadSala.Equipos)
+        {
+            miRespuesta = actual.VotosEquipo
+                .FirstOrDefault(v => v.JugadorId == jugadorId)?
+                .Opcion;
+        }
+
         ResultadoRondaDto? resultado = null;
 
         if (partida.Fase == FasePartida.Resultados)
         {
-            var respuestas = partida.Jugadores
+            var respuestas = partida.Sala.Modalidad == ModalidadSala.Equipos
+                ? new List<RespuestaJugadorDto>()
+                : partida.Jugadores
                 .Select(j =>
                 {
                     var r = actual.Respuestas
@@ -423,6 +472,92 @@ public class PartidasController : ControllerBase
             return new MarcadorJugadorDto(j.JugadorId, j.Jugador.Nombre, puntos, aciertos, racha);
         }).OrderByDescending(j => j.Puntos).ThenBy(j => j.Nombre).ToList();
 
+        EquipoActualDto? miEquipo = null;
+        List<MarcadorEquipoDto>? marcadorEquipos = null;
+        List<ResultadoEquipoDto>? resultadosEquipos = null;
+
+        if (partida.Sala.Modalidad == ModalidadSala.Equipos)
+        {
+            // No se utiliza la clasificación individual.
+            marcador.Clear();
+
+            var equipoJugador = partida.Equipos.SingleOrDefault(
+                e => e.Miembros.Any(m => m.JugadorId == jugadorId));
+
+            if (equipoJugador != null)
+            {
+                var votos = equipoJugador.Miembros
+                    .OrderBy(m => m.Jugador.Nombre)
+                    .Select(m => new VotoMiembroEquipoDto(
+                        m.JugadorId,
+                        m.Jugador.Nombre,
+                        actual.VotosEquipo
+                            .FirstOrDefault(v => v.JugadorId == m.JugadorId)?
+                            .Opcion))
+                    .ToList();
+
+                bool confirmada = actual.RespuestasEquipo.Any(
+                    r => r.EquipoPartidaId == equipoJugador.Id);
+
+                miEquipo = new EquipoActualDto(
+                    equipoJugador.Id,
+                    equipoJugador.Nombre,
+                    MotorEquipos.ObtenerConsenso(
+                        actual, equipoJugador) != null,
+                    confirmada,
+                    votos);
+            }
+
+            // Calcular marcador a partir de rondas ya cerradas.
+            marcadorEquipos = partida.Equipos.Select(e =>
+            {
+                int puntos = 0;
+                int aciertos = 0;
+                int racha = 0;
+
+                foreach (var ronda in cerradas)
+                {
+                    var respuestaEquipo = ronda.RespuestasEquipo
+                        .FirstOrDefault(r => r.EquipoPartidaId == e.Id);
+
+                    puntos += respuestaEquipo?.PuntosGanados ?? 0;
+
+                    if (respuestaEquipo?.EsCorrecta == true)
+                    {
+                        aciertos++;
+                        racha++;
+                    }
+                    else
+                    {
+                        racha = 0;
+                    }
+                }
+
+                return new MarcadorEquipoDto(
+                    e.Id, e.Nombre, puntos, aciertos, racha);
+            })
+            .OrderByDescending(e => e.Puntos)
+            .ThenBy(e => e.Nombre)
+            .ToList();
+
+            // No revelar la respuesta definitiva antes de Resultados.
+            if (partida.Fase == FasePartida.Resultados)
+            {
+                resultadosEquipos = partida.Equipos.Select(e =>
+                {
+                    var respuestaEquipo = actual.RespuestasEquipo
+                        .FirstOrDefault(r => r.EquipoPartidaId == e.Id);
+
+                    return new ResultadoEquipoDto(
+                        e.Id,
+                        e.Nombre,
+                        respuestaEquipo?.Opcion,
+                        respuestaEquipo?.EsCorrecta ?? false,
+                        respuestaEquipo?.PuntosGanados ?? 0);
+                }).ToList();
+            }
+        }
+
         return new EstadoPartidaDto(
             partida.Id,
             partida.Sala.Codigo,
@@ -436,6 +571,9 @@ public class PartidasController : ControllerBase
             pregunta,
             miRespuesta,
             resultado,
-            marcador);
+            marcador,
+            miEquipo,
+            marcadorEquipos,
+            resultadosEquipos);
     }
 }

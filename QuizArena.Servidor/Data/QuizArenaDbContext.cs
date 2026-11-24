@@ -29,6 +29,15 @@ public class QuizArenaDbContext : DbContext
     public DbSet<RespuestaPartida> RespuestasPartida
         => Set<RespuestaPartida>();
 
+    public DbSet<EquipoPartida> EquiposPartida
+        => Set<EquipoPartida>();
+
+    public DbSet<VotoEquipo> VotosEquipo
+        => Set<VotoEquipo>();
+
+    public DbSet<RespuestaEquipo> RespuestasEquipo
+        => Set<RespuestaEquipo>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -265,5 +274,78 @@ public class QuizArenaDbContext : DbContext
             .HasConversion(
                 f => f,
                 f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
+
+        // Equipos de una partida.
+        var equipo = modelBuilder.Entity<EquipoPartida>();
+
+        equipo.Property(e => e.Nombre)
+            .IsRequired()
+            .HasMaxLength(30);
+
+        equipo.HasOne(e => e.Partida)
+            .WithMany(p => p.Equipos)
+            .HasForeignKey(e => e.PartidaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        equipo.HasIndex(e => new { e.PartidaId, e.Nombre })
+            .IsUnique();
+
+        // Relación entre jugador y equipo.
+        modelBuilder.Entity<PartidaJugador>()
+            .HasOne(j => j.Equipo)
+            .WithMany(e => e.Miembros)
+            .HasForeignKey(j => j.EquipoPartidaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Votos provisionales.
+        var voto = modelBuilder.Entity<VotoEquipo>();
+
+        voto.Property(v => v.Opcion)
+            .IsRequired()
+            .HasMaxLength(1);
+
+        voto.HasOne(v => v.PartidaPregunta)
+            .WithMany(p => p.VotosEquipo)
+            .HasForeignKey(v => v.PartidaPreguntaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        voto.HasOne(v => v.Jugador)
+            .WithMany()
+            .HasForeignKey(v => v.JugadorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        voto.HasIndex(v => new
+        {
+            v.PartidaPreguntaId,
+            v.JugadorId
+        }).IsUnique();
+
+        // Respuesta definitiva del equipo.
+        var respuestaEquipo = modelBuilder.Entity<RespuestaEquipo>();
+
+        respuestaEquipo.Property(r => r.Opcion)
+            .IsRequired()
+            .HasMaxLength(1);
+
+        respuestaEquipo.HasOne(r => r.PartidaPregunta)
+            .WithMany(p => p.RespuestasEquipo)
+            .HasForeignKey(r => r.PartidaPreguntaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        respuestaEquipo.HasOne(r => r.Equipo)
+            .WithMany()
+            .HasForeignKey(r => r.EquipoPartidaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        respuestaEquipo.HasIndex(r => new
+        {
+            r.PartidaPreguntaId,
+            r.EquipoPartidaId
+        }).IsUnique();
+
+        voto.Property(v => v.FechaUtc).HasConversion(
+            f => f, f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
+        respuestaEquipo.Property(r => r.ConfirmadaUtc).HasConversion(
+            f => f, f => DateTime.SpecifyKind(f, DateTimeKind.Utc));
     }
 }
