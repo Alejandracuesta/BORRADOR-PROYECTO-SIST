@@ -1,0 +1,1902 @@
+[
+  {
+    "id": 1,
+    "categoria": "Arte y literatura",
+    "dificultad": "Facil",
+    "enunciado": "¿Quién escribió «Don Quijote de la Mancha»?",
+    "opcionA": "Garcilaso de la Vega",
+    "opcionB": "Francisco de Quevedo",
+    "opcionC": "Miguel de Cervantes",
+    "opcionD": "Lope de Vega",
+    "correcta": "C",
+    "respuestaCorrecta": "Miguel de Cervantes",
+    "respuestasIncorrectas": [
+      "Garcilaso de la Vega",
+      "Francisco de Quevedo",
+      "Lope de Vega"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 2,
+    "categoria": "Arte y literatura",
+    "dificultad": "Facil",
+    "enunciado": "¿Quién pintó «La Gioconda»?",
+    "opcionA": "Sandro Botticelli",
+    "opcionB": "Miguel Ángel",
+    "opcionC": "Leonardo da Vinci",
+    "opcionD": "Rafael",
+    "correcta": "C",
+    "respuestaCorrecta": "Leonardo da Vinci",
+    "respuestasIncorrectas": [
+      "Sandro Botticelli",
+      "Miguel Ángel",
+      "Rafael"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 3,
+    "categoria": "Arte y literatura",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué pintor español pintó el «Guernica»?",
+    "opcionA": "Joan Miró",
+    "opcionB": "Pablo Picasso",
+    "opcionC": "Diego Velázquez",
+    "opcionD": "Salvador Dalí",
+    "correcta": "B",
+    "respuestaCorrecta": "Pablo Picasso",
+    "respuestasIncorrectas": [
+      "Joan Miró",
+      "Diego Velázquez",
+      "Salvador Dalí"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 4,
+    "categoria": "Arte y literatura",
+    "dificultad": "Facil",
+    "enunciado": "¿Quién escribió «Romeo y Julieta»?",
+    "opcionA": "Charles Dickens",
+    "opcionB": "William Shakespeare",
+    "opcionC": "Oscar Wilde",
+    "opcionD": "Christopher Marlowe",
+    "correcta": "B",
+    "respuestaCorrecta": "William Shakespeare",
+    "respuestasIncorrectas": [
+      "Charles Dickens",
+      "Oscar Wilde",
+      "Christopher Marlowe"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 5,
+    "categoria": "Arte y literatura",
+    "dificultad": "Media",
+    "enunciado": "¿En qué museo se expone «Las meninas» de Velázquez?",
+    "opcionA": "Museo Reina Sofía",
+    "opcionB": "Museo del Louvre",
+    "opcionC": "Museo del Prado",
+    "opcionD": "Museo Thyssen-Bornemisza",
+    "correcta": "C",
+    "respuestaCorrecta": "Museo del Prado",
+    "respuestasIncorrectas": [
+      "Museo Reina Sofía",
+      "Museo del Louvre",
+      "Museo Thyssen-Bornemisza"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 6,
+    "categoria": "Arte y literatura",
+    "dificultad": "Media",
+    "enunciado": "¿Qué autor colombiano escribió «Cien años de soledad»?",
+    "opcionA": "Pablo Neruda",
+    "opcionB": "Mario Vargas Llosa",
+    "opcionC": "Gabriel García Márquez",
+    "opcionD": "Julio Cortázar",
+    "correcta": "C",
+    "respuestaCorrecta": "Gabriel García Márquez",
+    "respuestasIncorrectas": [
+      "Pablo Neruda",
+      "Mario Vargas Llosa",
+      "Julio Cortázar"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 7,
+    "categoria": "Arte y literatura",
+    "dificultad": "Media",
+    "enunciado": "¿Cuántos versos tiene un soneto clásico?",
+    "opcionA": "14",
+    "opcionB": "10",
+    "opcionC": "16",
+    "opcionD": "12",
+    "correcta": "A",
+    "respuestaCorrecta": "14",
+    "respuestasIncorrectas": [
+      "10",
+      "16",
+      "12"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 8,
+    "categoria": "Arte y literatura",
+    "dificultad": "Media",
+    "enunciado": "¿Qué escultor creó «El pensador»?",
+    "opcionA": "Miguel Ángel",
+    "opcionB": "Auguste Rodin",
+    "opcionC": "Antonio Canova",
+    "opcionD": "Donatello",
+    "correcta": "B",
+    "respuestaCorrecta": "Auguste Rodin",
+    "respuestasIncorrectas": [
+      "Miguel Ángel",
+      "Antonio Canova",
+      "Donatello"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 9,
+    "categoria": "Arte y literatura",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué movimiento artístico encabezó André Breton con su manifiesto de 1924?",
+    "opcionA": "Surrealismo",
+    "opcionB": "Futurismo",
+    "opcionC": "Dadaísmo",
+    "opcionD": "Cubismo",
+    "correcta": "A",
+    "respuestaCorrecta": "Surrealismo",
+    "respuestasIncorrectas": [
+      "Futurismo",
+      "Dadaísmo",
+      "Cubismo"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 10,
+    "categoria": "Arte y literatura",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué escritor argentino es autor de «El Aleph»?",
+    "opcionA": "Ernesto Sabato",
+    "opcionB": "Julio Cortázar",
+    "opcionC": "Adolfo Bioy Casares",
+    "opcionD": "Jorge Luis Borges",
+    "correcta": "D",
+    "respuestaCorrecta": "Jorge Luis Borges",
+    "respuestasIncorrectas": [
+      "Ernesto Sabato",
+      "Julio Cortázar",
+      "Adolfo Bioy Casares"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 11,
+    "categoria": "Ciencia",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es la fórmula química del agua?",
+    "opcionA": "H2O2",
+    "opcionB": "H2O",
+    "opcionC": "CO2",
+    "opcionD": "O2",
+    "correcta": "B",
+    "respuestaCorrecta": "H2O",
+    "respuestasIncorrectas": [
+      "H2O2",
+      "CO2",
+      "O2"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 12,
+    "categoria": "Ciencia",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántos huesos tiene el cuerpo humano adulto?",
+    "opcionA": "206",
+    "opcionB": "156",
+    "opcionC": "306",
+    "opcionD": "256",
+    "correcta": "A",
+    "respuestaCorrecta": "206",
+    "respuestasIncorrectas": [
+      "156",
+      "306",
+      "256"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 13,
+    "categoria": "Ciencia",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué gas absorben las plantas durante la fotosíntesis?",
+    "opcionA": "Helio",
+    "opcionB": "Oxígeno",
+    "opcionC": "Dióxido de carbono",
+    "opcionD": "Nitrógeno",
+    "correcta": "C",
+    "respuestaCorrecta": "Dióxido de carbono",
+    "respuestasIncorrectas": [
+      "Helio",
+      "Oxígeno",
+      "Nitrógeno"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 14,
+    "categoria": "Ciencia",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es el planeta más grande del sistema solar?",
+    "opcionA": "Júpiter",
+    "opcionB": "Saturno",
+    "opcionC": "Tierra",
+    "opcionD": "Neptuno",
+    "correcta": "A",
+    "respuestaCorrecta": "Júpiter",
+    "respuestasIncorrectas": [
+      "Saturno",
+      "Tierra",
+      "Neptuno"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 15,
+    "categoria": "Ciencia",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es la velocidad aproximada de la luz en el vacío?",
+    "opcionA": "3.000.000 km/s",
+    "opcionB": "30.000 km/s",
+    "opcionC": "150.000 km/s",
+    "opcionD": "300.000 km/s",
+    "correcta": "D",
+    "respuestaCorrecta": "300.000 km/s",
+    "respuestasIncorrectas": [
+      "3.000.000 km/s",
+      "30.000 km/s",
+      "150.000 km/s"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 16,
+    "categoria": "Ciencia",
+    "dificultad": "Media",
+    "enunciado": "¿Qué orgánulo celular produce la mayor parte del ATP?",
+    "opcionA": "Ribosoma",
+    "opcionB": "Mitocondria",
+    "opcionC": "Lisosoma",
+    "opcionD": "Aparato de Golgi",
+    "correcta": "B",
+    "respuestaCorrecta": "Mitocondria",
+    "respuestasIncorrectas": [
+      "Ribosoma",
+      "Lisosoma",
+      "Aparato de Golgi"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 17,
+    "categoria": "Ciencia",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es el elemento químico más abundante en el universo?",
+    "opcionA": "Oxígeno",
+    "opcionB": "Carbono",
+    "opcionC": "Helio",
+    "opcionD": "Hidrógeno",
+    "correcta": "D",
+    "respuestaCorrecta": "Hidrógeno",
+    "respuestasIncorrectas": [
+      "Oxígeno",
+      "Carbono",
+      "Helio"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 18,
+    "categoria": "Ciencia",
+    "dificultad": "Media",
+    "enunciado": "¿Qué científico formuló la teoría de la relatividad?",
+    "opcionA": "Isaac Newton",
+    "opcionB": "Niels Bohr",
+    "opcionC": "Galileo Galilei",
+    "opcionD": "Albert Einstein",
+    "correcta": "D",
+    "respuestaCorrecta": "Albert Einstein",
+    "respuestasIncorrectas": [
+      "Isaac Newton",
+      "Niels Bohr",
+      "Galileo Galilei"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 19,
+    "categoria": "Ciencia",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuál es el número atómico del carbono?",
+    "opcionA": "14",
+    "opcionB": "12",
+    "opcionC": "6",
+    "opcionD": "8",
+    "correcta": "C",
+    "respuestaCorrecta": "6",
+    "respuestasIncorrectas": [
+      "14",
+      "12",
+      "8"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 20,
+    "categoria": "Ciencia",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué constante relaciona la energía de un fotón con su frecuencia?",
+    "opcionA": "Constante de Avogadro",
+    "opcionB": "Constante de Coulomb",
+    "opcionC": "Constante de Boltzmann",
+    "opcionD": "Constante de Planck",
+    "correcta": "D",
+    "respuestaCorrecta": "Constante de Planck",
+    "respuestasIncorrectas": [
+      "Constante de Avogadro",
+      "Constante de Coulomb",
+      "Constante de Boltzmann"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 21,
+    "categoria": "Cine y series",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué película de James Cameron de 1997 narra el hundimiento de un famoso transatlántico?",
+    "opcionA": "Mentiras arriesgadas",
+    "opcionB": "Abyss",
+    "opcionC": "Avatar",
+    "opcionD": "Titanic",
+    "correcta": "D",
+    "respuestaCorrecta": "Titanic",
+    "respuestasIncorrectas": [
+      "Mentiras arriesgadas",
+      "Abyss",
+      "Avatar"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 22,
+    "categoria": "Cine y series",
+    "dificultad": "Facil",
+    "enunciado": "¿Cómo se llama el joven mago protagonista de la saga creada por J. K. Rowling?",
+    "opcionA": "Merlín",
+    "opcionB": "Gandalf",
+    "opcionC": "Harry Potter",
+    "opcionD": "Percy Jackson",
+    "correcta": "C",
+    "respuestaCorrecta": "Harry Potter",
+    "respuestasIncorrectas": [
+      "Merlín",
+      "Gandalf",
+      "Percy Jackson"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 23,
+    "categoria": "Cine y series",
+    "dificultad": "Facil",
+    "enunciado": "¿Quién dirigió «Parque Jurásico» (1993)?",
+    "opcionA": "Ridley Scott",
+    "opcionB": "George Lucas",
+    "opcionC": "Steven Spielberg",
+    "opcionD": "James Cameron",
+    "correcta": "C",
+    "respuestaCorrecta": "Steven Spielberg",
+    "respuestasIncorrectas": [
+      "Ridley Scott",
+      "George Lucas",
+      "James Cameron"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 24,
+    "categoria": "Cine y series",
+    "dificultad": "Facil",
+    "enunciado": "¿En qué ciudad ficticia vive Batman?",
+    "opcionA": "Gotham City",
+    "opcionB": "Central City",
+    "opcionC": "Star City",
+    "opcionD": "Metrópolis",
+    "correcta": "A",
+    "respuestaCorrecta": "Gotham City",
+    "respuestasIncorrectas": [
+      "Central City",
+      "Star City",
+      "Metrópolis"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 25,
+    "categoria": "Cine y series",
+    "dificultad": "Media",
+    "enunciado": "¿Qué serie está ambientada en los Siete Reinos de Poniente?",
+    "opcionA": "Juego de tronos",
+    "opcionB": "The Witcher",
+    "opcionC": "Vikingos",
+    "opcionD": "Los anillos de poder",
+    "correcta": "A",
+    "respuestaCorrecta": "Juego de tronos",
+    "respuestasIncorrectas": [
+      "The Witcher",
+      "Vikingos",
+      "Los anillos de poder"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 26,
+    "categoria": "Cine y series",
+    "dificultad": "Media",
+    "enunciado": "¿Cómo se llama el profesor de química protagonista de «Breaking Bad»?",
+    "opcionA": "Jesse Pinkman",
+    "opcionB": "Saul Goodman",
+    "opcionC": "Hank Schrader",
+    "opcionD": "Walter White",
+    "correcta": "D",
+    "respuestaCorrecta": "Walter White",
+    "respuestasIncorrectas": [
+      "Jesse Pinkman",
+      "Saul Goodman",
+      "Hank Schrader"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 27,
+    "categoria": "Cine y series",
+    "dificultad": "Media",
+    "enunciado": "¿Qué película de Alfred Hitchcock contiene la famosa escena de la ducha en el motel Bates?",
+    "opcionA": "Vértigo",
+    "opcionB": "Los pájaros",
+    "opcionC": "La ventana indiscreta",
+    "opcionD": "Psicosis",
+    "correcta": "D",
+    "respuestaCorrecta": "Psicosis",
+    "respuestasIncorrectas": [
+      "Vértigo",
+      "Los pájaros",
+      "La ventana indiscreta"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 28,
+    "categoria": "Cine y series",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál fue la primera película de habla no inglesa en ganar el Óscar a mejor película?",
+    "opcionA": "La vida es bella",
+    "opcionB": "Amélie",
+    "opcionC": "Roma",
+    "opcionD": "Parásitos",
+    "correcta": "D",
+    "respuestaCorrecta": "Parásitos",
+    "respuestasIncorrectas": [
+      "La vida es bella",
+      "Amélie",
+      "Roma"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 29,
+    "categoria": "Cine y series",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuántos Óscar ganó «El señor de los anillos: El retorno del rey»?",
+    "opcionA": "9",
+    "opcionB": "13",
+    "opcionC": "7",
+    "opcionD": "11",
+    "correcta": "D",
+    "respuestaCorrecta": "11",
+    "respuestasIncorrectas": [
+      "9",
+      "13",
+      "7"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 30,
+    "categoria": "Cine y series",
+    "dificultad": "Dificil",
+    "enunciado": "¿Por qué película ganó Pedro Almodóvar el Óscar al mejor guion original?",
+    "opcionA": "Hable con ella",
+    "opcionB": "Volver",
+    "opcionC": "Todo sobre mi madre",
+    "opcionD": "Mujeres al borde de un ataque de nervios",
+    "correcta": "A",
+    "respuestaCorrecta": "Hable con ella",
+    "respuestasIncorrectas": [
+      "Volver",
+      "Todo sobre mi madre",
+      "Mujeres al borde de un ataque de nervios"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 31,
+    "categoria": "Cultura general",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántos días tiene un año bisiesto?",
+    "opcionA": "364",
+    "opcionB": "366",
+    "opcionC": "365",
+    "opcionD": "367",
+    "correcta": "B",
+    "respuestaCorrecta": "366",
+    "respuestasIncorrectas": [
+      "364",
+      "365",
+      "367"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 32,
+    "categoria": "Cultura general",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántos colores tiene el arcoíris según la tradición?",
+    "opcionA": "8",
+    "opcionB": "5",
+    "opcionC": "6",
+    "opcionD": "7",
+    "correcta": "D",
+    "respuestaCorrecta": "7",
+    "respuestasIncorrectas": [
+      "8",
+      "5",
+      "6"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 33,
+    "categoria": "Cultura general",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántos lados tiene un hexágono?",
+    "opcionA": "6",
+    "opcionB": "5",
+    "opcionC": "7",
+    "opcionD": "8",
+    "correcta": "A",
+    "respuestaCorrecta": "6",
+    "respuestasIncorrectas": [
+      "5",
+      "7",
+      "8"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 34,
+    "categoria": "Cultura general",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué número romano representa el 10?",
+    "opcionA": "X",
+    "opcionB": "C",
+    "opcionC": "L",
+    "opcionD": "V",
+    "correcta": "A",
+    "respuestaCorrecta": "X",
+    "respuestasIncorrectas": [
+      "C",
+      "L",
+      "V"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 35,
+    "categoria": "Cultura general",
+    "dificultad": "Media",
+    "enunciado": "¿Qué idioma tiene más hablantes nativos en el mundo?",
+    "opcionA": "Español",
+    "opcionB": "Chino mandarín",
+    "opcionC": "Inglés",
+    "opcionD": "Hindi",
+    "correcta": "B",
+    "respuestaCorrecta": "Chino mandarín",
+    "respuestasIncorrectas": [
+      "Español",
+      "Inglés",
+      "Hindi"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 36,
+    "categoria": "Cultura general",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es la moneda oficial de Japón?",
+    "opcionA": "Rupia",
+    "opcionB": "Yen",
+    "opcionC": "Yuan",
+    "opcionD": "Won",
+    "correcta": "B",
+    "respuestaCorrecta": "Yen",
+    "respuestasIncorrectas": [
+      "Rupia",
+      "Yuan",
+      "Won"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 37,
+    "categoria": "Cultura general",
+    "dificultad": "Media",
+    "enunciado": "¿Cuántas cartas tiene una baraja francesa sin comodines?",
+    "opcionA": "52",
+    "opcionB": "48",
+    "opcionC": "40",
+    "opcionD": "54",
+    "correcta": "A",
+    "respuestaCorrecta": "52",
+    "respuestasIncorrectas": [
+      "48",
+      "40",
+      "54"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 38,
+    "categoria": "Cultura general",
+    "dificultad": "Media",
+    "enunciado": "¿En qué fecha se celebra el Día de la Constitución en España?",
+    "opcionA": "8 de diciembre",
+    "opcionB": "12 de octubre",
+    "opcionC": "1 de mayo",
+    "opcionD": "6 de diciembre",
+    "correcta": "D",
+    "respuestaCorrecta": "6 de diciembre",
+    "respuestasIncorrectas": [
+      "8 de diciembre",
+      "12 de octubre",
+      "1 de mayo"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 39,
+    "categoria": "Cultura general",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cómo se escribe el año 1999 en números romanos?",
+    "opcionA": "MCMXCVIIII",
+    "opcionB": "MCMXCIX",
+    "opcionC": "MIM",
+    "opcionD": "MDCCCXCIX",
+    "correcta": "B",
+    "respuestaCorrecta": "MCMXCIX",
+    "respuestasIncorrectas": [
+      "MCMXCVIIII",
+      "MIM",
+      "MDCCCXCIX"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 40,
+    "categoria": "Cultura general",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuántos husos horarios oficiales tiene Rusia?",
+    "opcionA": "13",
+    "opcionB": "9",
+    "opcionC": "7",
+    "opcionD": "11",
+    "correcta": "D",
+    "respuestaCorrecta": "11",
+    "respuestasIncorrectas": [
+      "13",
+      "9",
+      "7"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 41,
+    "categoria": "Deportes",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántos jugadores tiene un equipo de fútbol en el campo?",
+    "opcionA": "12",
+    "opcionB": "10",
+    "opcionC": "9",
+    "opcionD": "11",
+    "correcta": "D",
+    "respuestaCorrecta": "11",
+    "respuestasIncorrectas": [
+      "12",
+      "10",
+      "9"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 42,
+    "categoria": "Deportes",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué deporte se juega con raqueta y volante?",
+    "opcionA": "Squash",
+    "opcionB": "Pádel",
+    "opcionC": "Bádminton",
+    "opcionD": "Tenis",
+    "correcta": "C",
+    "respuestaCorrecta": "Bádminton",
+    "respuestasIncorrectas": [
+      "Squash",
+      "Pádel",
+      "Tenis"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 43,
+    "categoria": "Deportes",
+    "dificultad": "Facil",
+    "enunciado": "¿Cada cuántos años se celebran los Juegos Olímpicos de verano?",
+    "opcionA": "2",
+    "opcionB": "4",
+    "opcionC": "5",
+    "opcionD": "3",
+    "correcta": "B",
+    "respuestaCorrecta": "4",
+    "respuestasIncorrectas": [
+      "2",
+      "5",
+      "3"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 44,
+    "categoria": "Deportes",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué selección ganó el Mundial de fútbol de 2010?",
+    "opcionA": "Alemania",
+    "opcionB": "España",
+    "opcionC": "Brasil",
+    "opcionD": "Países Bajos",
+    "correcta": "B",
+    "respuestaCorrecta": "España",
+    "respuestasIncorrectas": [
+      "Alemania",
+      "Brasil",
+      "Países Bajos"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 45,
+    "categoria": "Deportes",
+    "dificultad": "Media",
+    "enunciado": "¿Cuántos puntos vale un tiro libre anotado en baloncesto?",
+    "opcionA": "2",
+    "opcionB": "1",
+    "opcionC": "3",
+    "opcionD": "0",
+    "correcta": "B",
+    "respuestaCorrecta": "1",
+    "respuestasIncorrectas": [
+      "2",
+      "3",
+      "0"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 46,
+    "categoria": "Deportes",
+    "dificultad": "Media",
+    "enunciado": "¿Qué tenista ha ganado más veces Roland Garros?",
+    "opcionA": "Novak Djokovic",
+    "opcionB": "Roger Federer",
+    "opcionC": "Björn Borg",
+    "opcionD": "Rafael Nadal",
+    "correcta": "D",
+    "respuestaCorrecta": "Rafael Nadal",
+    "respuestasIncorrectas": [
+      "Novak Djokovic",
+      "Roger Federer",
+      "Björn Borg"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 47,
+    "categoria": "Deportes",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es la distancia oficial de un maratón?",
+    "opcionA": "40 km",
+    "opcionB": "45,5 km",
+    "opcionC": "42,195 km",
+    "opcionD": "42 km",
+    "correcta": "C",
+    "respuestaCorrecta": "42,195 km",
+    "respuestasIncorrectas": [
+      "40 km",
+      "45,5 km",
+      "42 km"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 48,
+    "categoria": "Deportes",
+    "dificultad": "Media",
+    "enunciado": "¿En qué ciudad se celebraron los Juegos Olímpicos de 1992?",
+    "opcionA": "Madrid",
+    "opcionB": "Seúl",
+    "opcionC": "Atlanta",
+    "opcionD": "Barcelona",
+    "correcta": "D",
+    "respuestaCorrecta": "Barcelona",
+    "respuestasIncorrectas": [
+      "Madrid",
+      "Seúl",
+      "Atlanta"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 49,
+    "categoria": "Deportes",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuántos jugadores por equipo hay en el campo en el rugby a quince?",
+    "opcionA": "7",
+    "opcionB": "13",
+    "opcionC": "11",
+    "opcionD": "15",
+    "correcta": "D",
+    "respuestaCorrecta": "15",
+    "respuestasIncorrectas": [
+      "7",
+      "13",
+      "11"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 50,
+    "categoria": "Deportes",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuántos títulos de Grand Slam individuales ganó Rafael Nadal?",
+    "opcionA": "24",
+    "opcionB": "22",
+    "opcionC": "18",
+    "opcionD": "20",
+    "correcta": "B",
+    "respuestaCorrecta": "22",
+    "respuestasIncorrectas": [
+      "24",
+      "18",
+      "20"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 51,
+    "categoria": "Geografía",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es el océano más grande del mundo?",
+    "opcionA": "Atlántico",
+    "opcionB": "Pacífico",
+    "opcionC": "Ártico",
+    "opcionD": "Índico",
+    "correcta": "B",
+    "respuestaCorrecta": "Pacífico",
+    "respuestasIncorrectas": [
+      "Atlántico",
+      "Ártico",
+      "Índico"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 52,
+    "categoria": "Geografía",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es la capital de Italia?",
+    "opcionA": "Florencia",
+    "opcionB": "Milán",
+    "opcionC": "Venecia",
+    "opcionD": "Roma",
+    "correcta": "D",
+    "respuestaCorrecta": "Roma",
+    "respuestasIncorrectas": [
+      "Florencia",
+      "Milán",
+      "Venecia"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 53,
+    "categoria": "Geografía",
+    "dificultad": "Facil",
+    "enunciado": "¿En qué continente se encuentra Kenia?",
+    "opcionA": "Oceanía",
+    "opcionB": "África",
+    "opcionC": "Asia",
+    "opcionD": "América del Sur",
+    "correcta": "B",
+    "respuestaCorrecta": "África",
+    "respuestasIncorrectas": [
+      "Oceanía",
+      "Asia",
+      "América del Sur"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 54,
+    "categoria": "Geografía",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es el país más grande del mundo por superficie?",
+    "opcionA": "Canadá",
+    "opcionB": "China",
+    "opcionC": "Rusia",
+    "opcionD": "Estados Unidos",
+    "correcta": "C",
+    "respuestaCorrecta": "Rusia",
+    "respuestasIncorrectas": [
+      "Canadá",
+      "China",
+      "Estados Unidos"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 55,
+    "categoria": "Geografía",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es la montaña más alta del mundo sobre el nivel del mar?",
+    "opcionA": "Everest",
+    "opcionB": "Kangchenjunga",
+    "opcionC": "Aconcagua",
+    "opcionD": "K2",
+    "correcta": "A",
+    "respuestaCorrecta": "Everest",
+    "respuestasIncorrectas": [
+      "Kangchenjunga",
+      "Aconcagua",
+      "K2"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 56,
+    "categoria": "Geografía",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es la capital de Canadá?",
+    "opcionA": "Montreal",
+    "opcionB": "Ottawa",
+    "opcionC": "Toronto",
+    "opcionD": "Vancouver",
+    "correcta": "B",
+    "respuestaCorrecta": "Ottawa",
+    "respuestasIncorrectas": [
+      "Montreal",
+      "Toronto",
+      "Vancouver"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 57,
+    "categoria": "Geografía",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es el desierto cálido más grande del mundo?",
+    "opcionA": "Sahara",
+    "opcionB": "Kalahari",
+    "opcionC": "Atacama",
+    "opcionD": "Gobi",
+    "correcta": "A",
+    "respuestaCorrecta": "Sahara",
+    "respuestasIncorrectas": [
+      "Kalahari",
+      "Atacama",
+      "Gobi"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 58,
+    "categoria": "Geografía",
+    "dificultad": "Media",
+    "enunciado": "¿Qué río atraviesa la ciudad de Budapest?",
+    "opcionA": "Elba",
+    "opcionB": "Rin",
+    "opcionC": "Danubio",
+    "opcionD": "Vístula",
+    "correcta": "C",
+    "respuestaCorrecta": "Danubio",
+    "respuestasIncorrectas": [
+      "Elba",
+      "Rin",
+      "Vístula"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 59,
+    "categoria": "Geografía",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuál es el lago más profundo del mundo?",
+    "opcionA": "Titicaca",
+    "opcionB": "Baikal",
+    "opcionC": "Tanganica",
+    "opcionD": "Superior",
+    "correcta": "B",
+    "respuestaCorrecta": "Baikal",
+    "respuestasIncorrectas": [
+      "Titicaca",
+      "Tanganica",
+      "Superior"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 60,
+    "categoria": "Geografía",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuál es la capital de Nueva Zelanda?",
+    "opcionA": "Wellington",
+    "opcionB": "Christchurch",
+    "opcionC": "Hamilton",
+    "opcionD": "Auckland",
+    "correcta": "A",
+    "respuestaCorrecta": "Wellington",
+    "respuestasIncorrectas": [
+      "Christchurch",
+      "Hamilton",
+      "Auckland"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 61,
+    "categoria": "Historia",
+    "dificultad": "Facil",
+    "enunciado": "¿En qué año terminó la Segunda Guerra Mundial?",
+    "opcionA": "1944",
+    "opcionB": "1939",
+    "opcionC": "1945",
+    "opcionD": "1950",
+    "correcta": "C",
+    "respuestaCorrecta": "1945",
+    "respuestasIncorrectas": [
+      "1944",
+      "1939",
+      "1950"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 62,
+    "categoria": "Historia",
+    "dificultad": "Facil",
+    "enunciado": "¿Quién fue el primer ser humano en pisar la Luna?",
+    "opcionA": "Yuri Gagarin",
+    "opcionB": "Michael Collins",
+    "opcionC": "Neil Armstrong",
+    "opcionD": "Buzz Aldrin",
+    "correcta": "C",
+    "respuestaCorrecta": "Neil Armstrong",
+    "respuestasIncorrectas": [
+      "Yuri Gagarin",
+      "Michael Collins",
+      "Buzz Aldrin"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 63,
+    "categoria": "Historia",
+    "dificultad": "Facil",
+    "enunciado": "¿En qué año cayó el muro de Berlín?",
+    "opcionA": "1979",
+    "opcionB": "1985",
+    "opcionC": "1991",
+    "opcionD": "1989",
+    "correcta": "D",
+    "respuestaCorrecta": "1989",
+    "respuestasIncorrectas": [
+      "1979",
+      "1985",
+      "1991"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 64,
+    "categoria": "Historia",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué civilización construyó las pirámides de Guiza?",
+    "opcionA": "Romana",
+    "opcionB": "Persa",
+    "opcionC": "Griega",
+    "opcionD": "Egipcia",
+    "correcta": "D",
+    "respuestaCorrecta": "Egipcia",
+    "respuestasIncorrectas": [
+      "Romana",
+      "Persa",
+      "Griega"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 65,
+    "categoria": "Historia",
+    "dificultad": "Media",
+    "enunciado": "¿En qué año se aprobó la Constitución española vigente?",
+    "opcionA": "1931",
+    "opcionB": "1981",
+    "opcionC": "1975",
+    "opcionD": "1978",
+    "correcta": "D",
+    "respuestaCorrecta": "1978",
+    "respuestasIncorrectas": [
+      "1931",
+      "1981",
+      "1975"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 66,
+    "categoria": "Historia",
+    "dificultad": "Media",
+    "enunciado": "¿Qué emperador francés fue derrotado en la batalla de Waterloo?",
+    "opcionA": "Napoleón III",
+    "opcionB": "Napoleón Bonaparte",
+    "opcionC": "Luis XIV",
+    "opcionD": "Carlomagno",
+    "correcta": "B",
+    "respuestaCorrecta": "Napoleón Bonaparte",
+    "respuestasIncorrectas": [
+      "Napoleón III",
+      "Luis XIV",
+      "Carlomagno"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 67,
+    "categoria": "Historia",
+    "dificultad": "Media",
+    "enunciado": "¿Quiénes fueron conocidos como los Reyes Católicos?",
+    "opcionA": "Isabel I de Castilla y Fernando II de Aragón",
+    "opcionB": "Felipe V y María Luisa de Saboya",
+    "opcionC": "Felipe II e Isabel de Valois",
+    "opcionD": "Carlos I e Isabel de Portugal",
+    "correcta": "A",
+    "respuestaCorrecta": "Isabel I de Castilla y Fernando II de Aragón",
+    "respuestasIncorrectas": [
+      "Felipe V y María Luisa de Saboya",
+      "Felipe II e Isabel de Valois",
+      "Carlos I e Isabel de Portugal"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 68,
+    "categoria": "Historia",
+    "dificultad": "Media",
+    "enunciado": "¿En qué año comenzó la Revolución francesa?",
+    "opcionA": "1789",
+    "opcionB": "1776",
+    "opcionC": "1815",
+    "opcionD": "1799",
+    "correcta": "A",
+    "respuestaCorrecta": "1789",
+    "respuestasIncorrectas": [
+      "1776",
+      "1815",
+      "1799"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 69,
+    "categoria": "Historia",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué batalla naval de 1571 enfrentó a la Liga Santa contra el Imperio otomano?",
+    "opcionA": "Batalla de Pavía",
+    "opcionB": "Batalla de Lepanto",
+    "opcionC": "Batalla de Rocroi",
+    "opcionD": "Batalla de Trafalgar",
+    "correcta": "B",
+    "respuestaCorrecta": "Batalla de Lepanto",
+    "respuestasIncorrectas": [
+      "Batalla de Pavía",
+      "Batalla de Rocroi",
+      "Batalla de Trafalgar"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 70,
+    "categoria": "Historia",
+    "dificultad": "Dificil",
+    "enunciado": "¿Quién fue el primer emperador de Roma?",
+    "opcionA": "Augusto",
+    "opcionB": "Julio César",
+    "opcionC": "Trajano",
+    "opcionD": "Nerón",
+    "correcta": "A",
+    "respuestaCorrecta": "Augusto",
+    "respuestasIncorrectas": [
+      "Julio César",
+      "Trajano",
+      "Nerón"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 71,
+    "categoria": "Música",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántas cuerdas tiene una guitarra española estándar?",
+    "opcionA": "6",
+    "opcionB": "7",
+    "opcionC": "5",
+    "opcionD": "4",
+    "correcta": "A",
+    "respuestaCorrecta": "6",
+    "respuestasIncorrectas": [
+      "7",
+      "5",
+      "4"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 72,
+    "categoria": "Música",
+    "dificultad": "Facil",
+    "enunciado": "¿De qué país era el grupo The Beatles?",
+    "opcionA": "Estados Unidos",
+    "opcionB": "Irlanda",
+    "opcionC": "Reino Unido",
+    "opcionD": "Australia",
+    "correcta": "C",
+    "respuestaCorrecta": "Reino Unido",
+    "respuestasIncorrectas": [
+      "Estados Unidos",
+      "Irlanda",
+      "Australia"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 73,
+    "categoria": "Música",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué compositor alemán siguió componiendo a pesar de quedarse sordo?",
+    "opcionA": "Johannes Brahms",
+    "opcionB": "Johann Sebastian Bach",
+    "opcionC": "Ludwig van Beethoven",
+    "opcionD": "Richard Wagner",
+    "correcta": "C",
+    "respuestaCorrecta": "Ludwig van Beethoven",
+    "respuestasIncorrectas": [
+      "Johannes Brahms",
+      "Johann Sebastian Bach",
+      "Richard Wagner"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 74,
+    "categoria": "Música",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántas notas tiene la escala musical diatónica?",
+    "opcionA": "5",
+    "opcionB": "8",
+    "opcionC": "7",
+    "opcionD": "12",
+    "correcta": "C",
+    "respuestaCorrecta": "7",
+    "respuestasIncorrectas": [
+      "5",
+      "8",
+      "12"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 75,
+    "categoria": "Música",
+    "dificultad": "Media",
+    "enunciado": "¿Qué cantante es conocido como el «Rey del Pop»?",
+    "opcionA": "Prince",
+    "opcionB": "Freddie Mercury",
+    "opcionC": "Michael Jackson",
+    "opcionD": "Elvis Presley",
+    "correcta": "C",
+    "respuestaCorrecta": "Michael Jackson",
+    "respuestasIncorrectas": [
+      "Prince",
+      "Freddie Mercury",
+      "Elvis Presley"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 76,
+    "categoria": "Música",
+    "dificultad": "Media",
+    "enunciado": "¿Qué compositor escribió «Las cuatro estaciones»?",
+    "opcionA": "Joseph Haydn",
+    "opcionB": "Antonio Vivaldi",
+    "opcionC": "Georg Friedrich Händel",
+    "opcionD": "Wolfgang Amadeus Mozart",
+    "correcta": "B",
+    "respuestaCorrecta": "Antonio Vivaldi",
+    "respuestasIncorrectas": [
+      "Joseph Haydn",
+      "Georg Friedrich Händel",
+      "Wolfgang Amadeus Mozart"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 77,
+    "categoria": "Música",
+    "dificultad": "Media",
+    "enunciado": "¿Cuántas teclas tiene un piano estándar?",
+    "opcionA": "96",
+    "opcionB": "88",
+    "opcionC": "72",
+    "opcionD": "76",
+    "correcta": "B",
+    "respuestaCorrecta": "88",
+    "respuestasIncorrectas": [
+      "96",
+      "72",
+      "76"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 78,
+    "categoria": "Música",
+    "dificultad": "Media",
+    "enunciado": "¿En qué país nació el tango?",
+    "opcionA": "Argentina",
+    "opcionB": "Brasil",
+    "opcionC": "Cuba",
+    "opcionD": "España",
+    "correcta": "A",
+    "respuestaCorrecta": "Argentina",
+    "respuestasIncorrectas": [
+      "Brasil",
+      "Cuba",
+      "España"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 79,
+    "categoria": "Música",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué compositor español escribió el «Concierto de Aranjuez»?",
+    "opcionA": "Joaquín Rodrigo",
+    "opcionB": "Enrique Granados",
+    "opcionC": "Manuel de Falla",
+    "opcionD": "Isaac Albéniz",
+    "correcta": "A",
+    "respuestaCorrecta": "Joaquín Rodrigo",
+    "respuestasIncorrectas": [
+      "Enrique Granados",
+      "Manuel de Falla",
+      "Isaac Albéniz"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 80,
+    "categoria": "Música",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué ópera de Georges Bizet está ambientada en Sevilla?",
+    "opcionA": "La traviata",
+    "opcionB": "Tosca",
+    "opcionC": "Carmen",
+    "opcionD": "Aida",
+    "correcta": "C",
+    "respuestaCorrecta": "Carmen",
+    "respuestasIncorrectas": [
+      "La traviata",
+      "Tosca",
+      "Aida"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 81,
+    "categoria": "Naturaleza",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es el animal terrestre más rápido?",
+    "opcionA": "Caballo",
+    "opcionB": "Antílope",
+    "opcionC": "Guepardo",
+    "opcionD": "León",
+    "correcta": "C",
+    "respuestaCorrecta": "Guepardo",
+    "respuestasIncorrectas": [
+      "Caballo",
+      "Antílope",
+      "León"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 82,
+    "categoria": "Naturaleza",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuál es el animal más grande del mundo?",
+    "opcionA": "Cachalote",
+    "opcionB": "Elefante africano",
+    "opcionC": "Ballena azul",
+    "opcionD": "Tiburón ballena",
+    "correcta": "C",
+    "respuestaCorrecta": "Ballena azul",
+    "respuestasIncorrectas": [
+      "Cachalote",
+      "Elefante africano",
+      "Tiburón ballena"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 83,
+    "categoria": "Naturaleza",
+    "dificultad": "Facil",
+    "enunciado": "¿Cuántas patas tiene una araña?",
+    "opcionA": "8",
+    "opcionB": "12",
+    "opcionC": "10",
+    "opcionD": "6",
+    "correcta": "A",
+    "respuestaCorrecta": "8",
+    "respuestasIncorrectas": [
+      "12",
+      "10",
+      "6"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 84,
+    "categoria": "Naturaleza",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué animal es conocido como el rey de la selva?",
+    "opcionA": "Gorila",
+    "opcionB": "Tigre",
+    "opcionC": "León",
+    "opcionD": "Jaguar",
+    "correcta": "C",
+    "respuestaCorrecta": "León",
+    "respuestasIncorrectas": [
+      "Gorila",
+      "Tigre",
+      "Jaguar"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 85,
+    "categoria": "Naturaleza",
+    "dificultad": "Media",
+    "enunciado": "¿Cómo se llama el proceso por el que una oruga se convierte en mariposa?",
+    "opcionA": "Metamorfosis",
+    "opcionB": "Mitosis",
+    "opcionC": "Fotosíntesis",
+    "opcionD": "Ósmosis",
+    "correcta": "A",
+    "respuestaCorrecta": "Metamorfosis",
+    "respuestasIncorrectas": [
+      "Mitosis",
+      "Fotosíntesis",
+      "Ósmosis"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 86,
+    "categoria": "Naturaleza",
+    "dificultad": "Media",
+    "enunciado": "¿Qué árbol produce bellotas?",
+    "opcionA": "Pino",
+    "opcionB": "Olivo",
+    "opcionC": "Castaño",
+    "opcionD": "Encina",
+    "correcta": "D",
+    "respuestaCorrecta": "Encina",
+    "respuestasIncorrectas": [
+      "Pino",
+      "Olivo",
+      "Castaño"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 87,
+    "categoria": "Naturaleza",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál es el ave más grande del mundo?",
+    "opcionA": "Emú",
+    "opcionB": "Cóndor andino",
+    "opcionC": "Avestruz",
+    "opcionD": "Albatros",
+    "correcta": "C",
+    "respuestaCorrecta": "Avestruz",
+    "respuestasIncorrectas": [
+      "Emú",
+      "Cóndor andino",
+      "Albatros"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 88,
+    "categoria": "Naturaleza",
+    "dificultad": "Media",
+    "enunciado": "¿Cuál de estos animales es un marsupial?",
+    "opcionA": "Murciélago",
+    "opcionB": "Nutria",
+    "opcionC": "Canguro",
+    "opcionD": "Mapache",
+    "correcta": "C",
+    "respuestaCorrecta": "Canguro",
+    "respuestasIncorrectas": [
+      "Murciélago",
+      "Nutria",
+      "Mapache"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 89,
+    "categoria": "Naturaleza",
+    "dificultad": "Dificil",
+    "enunciado": "¿Cuántos corazones tiene un pulpo?",
+    "opcionA": "4",
+    "opcionB": "3",
+    "opcionC": "2",
+    "opcionD": "1",
+    "correcta": "B",
+    "respuestaCorrecta": "3",
+    "respuestasIncorrectas": [
+      "4",
+      "2",
+      "1"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 90,
+    "categoria": "Naturaleza",
+    "dificultad": "Dificil",
+    "enunciado": "¿A qué grupo de animales pertenece el ajolote?",
+    "opcionA": "Peces",
+    "opcionB": "Anfibios",
+    "opcionC": "Mamíferos",
+    "opcionD": "Reptiles",
+    "correcta": "B",
+    "respuestaCorrecta": "Anfibios",
+    "respuestasIncorrectas": [
+      "Peces",
+      "Mamíferos",
+      "Reptiles"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 91,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué significan las siglas CPU?",
+    "opcionA": "Procesador de usuario central",
+    "opcionB": "Unidad de control personal",
+    "opcionC": "Unidad de cálculo programable",
+    "opcionD": "Unidad central de procesamiento",
+    "correcta": "D",
+    "respuestaCorrecta": "Unidad central de procesamiento",
+    "respuestasIncorrectas": [
+      "Procesador de usuario central",
+      "Unidad de control personal",
+      "Unidad de cálculo programable"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 92,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué empresa creó el sistema operativo Windows?",
+    "opcionA": "Google",
+    "opcionB": "Apple",
+    "opcionC": "IBM",
+    "opcionD": "Microsoft",
+    "correcta": "D",
+    "respuestaCorrecta": "Microsoft",
+    "respuestasIncorrectas": [
+      "Google",
+      "Apple",
+      "IBM"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 93,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Facil",
+    "enunciado": "¿Cómo se llama el fontanero protagonista de los juegos de plataformas de Nintendo?",
+    "opcionA": "Mario",
+    "opcionB": "Link",
+    "opcionC": "Luigi",
+    "opcionD": "Wario",
+    "correcta": "A",
+    "respuestaCorrecta": "Mario",
+    "respuestasIncorrectas": [
+      "Link",
+      "Luigi",
+      "Wario"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 94,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Facil",
+    "enunciado": "¿Qué empresa fabrica la consola PlayStation?",
+    "opcionA": "Sony",
+    "opcionB": "Nintendo",
+    "opcionC": "Microsoft",
+    "opcionD": "Sega",
+    "correcta": "A",
+    "respuestaCorrecta": "Sony",
+    "respuestasIncorrectas": [
+      "Nintendo",
+      "Microsoft",
+      "Sega"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 95,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Media",
+    "enunciado": "¿Qué lenguaje se usa principalmente para dar estilo a las páginas web?",
+    "opcionA": "Python",
+    "opcionB": "CSS",
+    "opcionC": "HTML",
+    "opcionD": "SQL",
+    "correcta": "B",
+    "respuestaCorrecta": "CSS",
+    "respuestasIncorrectas": [
+      "Python",
+      "HTML",
+      "SQL"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 96,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Media",
+    "enunciado": "¿En qué año se presentó el primer iPhone?",
+    "opcionA": "2005",
+    "opcionB": "2010",
+    "opcionC": "2007",
+    "opcionD": "2009",
+    "correcta": "C",
+    "respuestaCorrecta": "2007",
+    "respuestasIncorrectas": [
+      "2005",
+      "2010",
+      "2009"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 97,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Media",
+    "enunciado": "¿Qué videojuego de construcción con bloques creó Markus «Notch» Persson?",
+    "opcionA": "Fortnite",
+    "opcionB": "Minecraft",
+    "opcionC": "Terraria",
+    "opcionD": "Roblox",
+    "correcta": "B",
+    "respuestaCorrecta": "Minecraft",
+    "respuestasIncorrectas": [
+      "Fortnite",
+      "Terraria",
+      "Roblox"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 98,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Media",
+    "enunciado": "¿Qué protocolo permite navegar por la web de forma cifrada?",
+    "opcionA": "HTTPS",
+    "opcionB": "HTTP",
+    "opcionC": "FTP",
+    "opcionD": "SMTP",
+    "correcta": "A",
+    "respuestaCorrecta": "HTTPS",
+    "respuestasIncorrectas": [
+      "HTTP",
+      "FTP",
+      "SMTP"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 99,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Dificil",
+    "enunciado": "¿Quién es considerada la primera programadora de la historia?",
+    "opcionA": "Ada Lovelace",
+    "opcionB": "Hedy Lamarr",
+    "opcionC": "Margaret Hamilton",
+    "opcionD": "Grace Hopper",
+    "correcta": "A",
+    "respuestaCorrecta": "Ada Lovelace",
+    "respuestasIncorrectas": [
+      "Hedy Lamarr",
+      "Margaret Hamilton",
+      "Grace Hopper"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  },
+  {
+    "id": 100,
+    "categoria": "Tecnología y videojuegos",
+    "dificultad": "Dificil",
+    "enunciado": "¿Qué número decimal corresponde al binario 1010?",
+    "opcionA": "8",
+    "opcionB": "5",
+    "opcionC": "12",
+    "opcionD": "10",
+    "correcta": "D",
+    "respuestaCorrecta": "10",
+    "respuestasIncorrectas": [
+      "8",
+      "5",
+      "12"
+    ],
+    "fuente": "Banco trivial QuizArena",
+    "licencia": "Propias"
+  }
+]

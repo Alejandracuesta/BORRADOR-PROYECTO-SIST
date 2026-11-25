@@ -24,6 +24,7 @@ public partial class PartidaForm : Form
     public PartidaForm()
     {
         InitializeComponent();
+        CrearPodio();
         Disposed += (_, _) => LiberarRecursos();
     }
 
@@ -158,6 +159,7 @@ public partial class PartidaForm : Form
                     : $"Respuesta enviada: {estado.MiRespuesta}. Esperando al resto de jugadores.";
         }
         MostrarMarcador(estado);
+        MostrarPodio(estado);
         ActualizarTiempo();
     }
 
