@@ -1,6 +1,6 @@
 # BORRADOR-PROYECTO-SIST
 
-## Quiz Arena — fase 5: motor de partidas individuales
+## Quiz Arena — fase 7: tiempo real, chat, revancha e historial
 
 Solución C# para Visual Studio 2026 y **.NET 10**, con una API REST en
 `http://localhost:5080`, una base de datos SQLite y varias instancias WinForms.
@@ -12,6 +12,8 @@ La fase 4 incorpora salas de espera compartidas, públicas o privadas, con
 configuración del anfitrión, control de aforo y estado de preparación.
 La fase 5 permite completar partidas individuales con preguntas compartidas,
 plazos oficiales, respuestas definitivas, puntuaciones y clasificación final.
+La fase 6 abre automáticamente la partida en todos los clientes y añade equipos
+de dos o tres integrantes, votos provisionales y confirmación por unanimidad.
 
 ```text
 QuizArena.sln
@@ -24,7 +26,8 @@ QuizArena.sln
 │   │   ├── PreguntasController.cs
 │   │   ├── AccesoController.cs
 │   │   ├── SalasController.cs
-│   │   └── PartidasController.cs
+│   │   ├── PartidasController.cs
+│   │   └── EquiposController.cs
 │   ├── Data/
 │   │   ├── QuizArenaDbContext.cs
 │   │   └── ImportadorPreguntas.cs
@@ -41,7 +44,10 @@ QuizArena.sln
 │   │   ├── Partida.cs
 │   │   ├── PartidaPregunta.cs
 │   │   ├── PartidaJugador.cs
-│   │   └── RespuestaPartida.cs
+│   │   ├── RespuestaPartida.cs
+│   │   ├── EquipoPartida.cs
+│   │   ├── VotoEquipo.cs
+│   │   └── RespuestaEquipo.cs
 │   ├── DTOs/
 │   │   ├── CrearJugadorDto.cs
 │   │   ├── JugadorRespuestaDto.cs
@@ -49,10 +55,12 @@ QuizArena.sln
 │   │   ├── PreguntaImportacionDto.cs
 │   │   ├── PreguntaPublicaDto.cs
 │   │   ├── SalasDto.cs
-│   │   └── PartidasDto.cs
+│   │   ├── PartidasDto.cs
+│   │   └── ConfirmarEquipoDto.cs
 │   ├── Services/
 │   │   ├── CoordinadorSalas.cs
-│   │   └── MotorPartidas.cs
+│   │   ├── MotorPartidas.cs
+│   │   └── MotorEquipos.cs
 │   ├── Datos/
 │   │   ├── preguntas.json
 │   │   └── preguntas_trivial_100_quizarena.json   Solo local, excluido de Git
@@ -78,7 +86,9 @@ El servidor mantiene las referencias directas a
 `Microsoft.EntityFrameworkCore.Sqlite` y `Microsoft.EntityFrameworkCore.Tools`,
 ambas en la versión **10.0.14**. La autenticación por cookies, `PasswordHasher` y
 `System.Text.Json` están disponibles con los componentes de ASP.NET Core y .NET
-utilizados por la solución; esta fase no necesita paquetes adicionales.
+utilizados por la solución. La fase 7 añade al cliente
+`Microsoft.AspNetCore.SignalR.Client` **10.0.14**; SignalR del servidor forma
+parte del framework ASP.NET Core.
 
 ### Arquitectura y relaciones
 
@@ -146,6 +156,7 @@ Las migraciones se acumulan en este orden:
 | `AccesoJugadores` | Añade `PasswordHash` nullable a los jugadores |
 | `SalasMultijugador` | Crea salas y participantes con sus relaciones e índices únicos |
 | `MotorPartidasIndividuales` | Crea partidas, preguntas asignadas, clasificación y respuestas |
+| `EquiposYVotaciones` | Añade equipos, votos, decisiones colectivas y `EquipoPartidaId` nullable en la clasificación |
 
 Al actualizar, se conservan los jugadores, categorías y preguntas existentes.
 No hay que eliminar la base ni volver a generar estas migraciones en un clon
@@ -357,8 +368,8 @@ Una sesión caducada devuelve al acceso para volver a identificarse.
 **Cerrar la ventana no abandona la sala.** Al abrirla de nuevo se recupera la
 pertenencia guardada. Las salas, participantes y preparación persisten al
 reiniciar el servidor. La lista representa miembros, no presencia de red: esta
-fase no detecta desconexiones. La fase 5 permite iniciar partidas individuales;
-la asignación de equipos y SignalR quedan para fases posteriores.
+fase no detecta desconexiones. Desde la fase 6 se inician partidas individuales
+y por equipos. SignalR y reconexión avanzada quedan para la fase 7.
 
 ### API de salas
 
@@ -384,8 +395,8 @@ preguntas devuelven HTTP 400; una reducción de aforo incompatible devuelve 409.
 ### Partidas individuales
 
 En una sala **Individual**, con al menos dos participantes y todos preparados,
-solo el anfitrión puede pulsar **Iniciar partida**. Después, cada jugador abre
-**Entrar en partida** y recibe el mismo enunciado, opciones y plazo oficial.
+solo el anfitrión puede pulsar **Iniciar partida**. Después, todos los clientes
+abren automáticamente el juego y reciben el mismo enunciado, opciones y plazo.
 La selección se realiza en el servidor con preguntas activas que cumplen los
 filtros de la sala, sin repetir preguntas dentro de una partida.
 
@@ -455,7 +466,7 @@ acceso existente.
 
 | Método | Ruta | Comportamiento |
 | --- | --- | --- |
-| POST | `/api/partidas/{codigo}/iniciar` | HTTP 200 para el anfitrión; HTTP 403 para otro jugador; HTTP 409 si faltan requisitos, la sala ya está jugando o es de equipos |
+| POST | `/api/partidas/{codigo}/iniciar` | HTTP 200 para el anfitrión; HTTP 403 para otro jugador; HTTP 409 si faltan requisitos o la sala ya está jugando; admite Individual y Equipos |
 | GET | `/api/partidas/actual` | Estado de la partida de la sala del jugador; HTTP 404 sin sala o sin partida |
 | POST | `/api/partidas/responder` | Recibe `preguntaId` y `opcion` A/B/C/D; HTTP 200 al aceptar, HTTP 409 por duplicado, pregunta distinta, fase cerrada o plazo vencido; HTTP 400 por opción inválida |
 
@@ -483,14 +494,242 @@ Para probar una partida completa:
 1. Iniciar servidor y cliente mediante **F5** y abrir dos clientes adicionales.
 2. Acceder con tres cuentas, crear una sala individual de tres plazas y cinco
    preguntas, unirse y marcar preparados a los tres.
-3. Iniciar como anfitrión y abrir **Entrar en partida** en cada cliente.
+3. Iniciar como anfitrión y comprobar la apertura automática en todos los clientes.
 4. Responder independientemente; comprobar resultados de ronda y clasificación.
 5. Volver a la sala y **Abandonar sala** al finalizar. Se podrá crear otra sala
    y se conservarán los resultados de la anterior.
 
 Cerrar la pantalla durante el juego no abandona ni pausa la partida. Se puede
 volver a entrar desde la sala con el tiempo que quede. En esta fase no se inicia
-el modo equipos, no hay revancha y no se incorpora SignalR.
+la revancha ni SignalR. El modo equipos se incorpora a continuación.
+
+### Entrada automática y códigos de sala (fase 6.1)
+
+El sondeo de la sala detecta `EnPartida` y abre una única `PartidaForm` por
+cliente. La apertura se programa con `BeginInvoke` cuando ya han finalizado
+todas las peticiones de actualización de la sala. Durante el diálogo se detiene
+el temporizador del lobby. Al cerrarlo se recupera la sala y se conserva el código
+ya abierto, evitando que cada sondeo vuelva a mostrar el diálogo.
+
+**Entrar en partida** permite volver manualmente si se cierra el juego. Al
+abandonar la sala se reinicia el control de apertura, para poder entrar
+automáticamente en una nueva partida. Se reutiliza la sesión autenticada de cada
+cliente y se propaga la caducidad de sesión al formulario de acceso.
+
+El campo de acceso admite exactamente **ocho caracteres hexadecimales**
+(`0–9`, `A–F`), convierte minúsculas en mayúsculas y muestra una ayuda de validación.
+Tiene texto centrado, fuente Consolas en negrita y una anchura de 230 píxeles.
+Un formato válido habilita **Entrar con código**; el servidor comprueba si existe
+la sala. **Intro** ejecuta la misma unión. **Copiar código** copia el de la sala
+activa para pegarlo en otro cliente con Ctrl+V. Los sondeos no deshabilitan el
+campo mientras se escribe, para conservar foco y selección.
+
+### Equipos, votaciones y unanimidad (fase 6.2)
+
+Las salas de modalidad **Equipos** admiten entre cuatro y doce jugadores. Todos
+deben estar preparados y solo el anfitrión puede iniciar. El servidor ordena los
+participantes por entrada y los distribuye de forma equilibrada una sola vez:
+
+| Jugadores | Tamaños de los equipos |
+| ---: | --- |
+| 4 | 2 + 2 |
+| 5 | 3 + 2 |
+| 6 | 3 + 3 |
+| 7 | 3 + 2 + 2 |
+| 8 | 3 + 3 + 2 |
+| 9 | 3 + 3 + 3 |
+| 10 | 3 + 3 + 2 + 2 |
+| 11 | 3 + 3 + 3 + 2 |
+| 12 | 3 + 3 + 3 + 3 |
+
+La composición queda guardada y no cambia durante la partida. `EquipoPartida`
+pertenece a una partida y mantiene nombre, miembros, puntos, aciertos y racha.
+`PartidaJugador.EquipoPartidaId` es nullable para conservar las partidas
+individuales anteriores. `PartidaPregunta` agrupa votos y respuestas colectivas.
+`VotoEquipo` representa la propuesta vigente de un jugador; `RespuestaEquipo`
+representa la decisión definitiva de todo el equipo.
+
+La migración `20261124154103_EquiposYVotaciones` crea `EquiposPartida`,
+`VotosEquipo` y `RespuestasEquipo` y añade la relación nullable en
+`PartidasJugadores`. EF reconstruye esta última tabla para añadir su clave
+externa en SQLite, copiando sus datos. Los índices únicos impiden dos votos del
+mismo jugador/pregunta y dos respuestas del mismo equipo/pregunta. Los nombres
+de equipo también son únicos dentro de una partida. Las fechas de votos y
+confirmaciones se recuperan como UTC.
+
+Cada integrante puede votar A/B/C/D y cambiar su propuesta mientras la pregunta
+esté abierta y el equipo no haya confirmado. Solo hay unanimidad cuando **todos
+los miembros han votado la misma opción**. Entonces cualquier integrante puede
+pulsar **Confirmar equipo**. El servidor vuelve a comprobar los votos bajo el
+mismo `CoordinadorSalas` que protege el resto del motor. El cliente solicita
+confirmación sin enviar una opción definitiva ni decidir los puntos.
+
+Después de confirmar, el equipo no puede cambiar su respuesta. Si vence el plazo,
+`MotorPartidas` confirma automáticamente los equipos unánimes con votos anteriores
+al límite; sin unanimidad no guarda una respuesta definitiva, otorga cero puntos
+y rompe la racha. La ronda termina cuando todos los equipos confirman o vence
+el tiempo, seguida de los cinco segundos de resultados existentes.
+
+| Dificultad | Plazo por equipo | Puntos base |
+| --- | ---: | ---: |
+| Fácil | 30 segundos | 100 |
+| Media | 45 segundos | 200 |
+| Difícil | 60 segundos | 300 |
+
+La racha pertenece al equipo: aciertos 3–4 añaden 50 puntos y desde el quinto
+añaden 100. Una respuesta incorrecta también obtiene cero y reinicia la racha.
+Los tiempos y reglas individuales 20/20/30 se mantienen. El endpoint individual
+rechaza partidas de equipos para impedir saltarse el consenso.
+
+### API de equipos y datos visibles
+
+| Método | Ruta | Comportamiento |
+| --- | --- | --- |
+| POST | `/api/partidas/equipos/votar` | Recibe `preguntaId` y `opcion`; guarda o modifica el voto propio |
+| POST | `/api/partidas/equipos/confirmar` | Recibe únicamente `preguntaId`; confirma el consenso vigente del equipo propio |
+
+Ambas rutas exigen sesión (HTTP 401 sin ella), obtienen jugador y equipo de la
+cookie y la pertenencia guardada, y usan el semáforo compartido. Una opción
+inválida devuelve HTTP 400. Pregunta antigua, plazo vencido, modo individual,
+respuesta ya confirmada o falta de unanimidad devuelven HTTP 409 según la operación.
+Un jugador sin sala/partida recibe HTTP 404. No se aceptan identidades, opciones
+definitivas ni puntuaciones elegidas por el cliente para confirmar.
+
+`EstadoPartidaDto` y `EstadoPartidaApi` incorporan `MiEquipo`, `MarcadorEquipos`
+y `ResultadosEquipos`, que son nulos en modo individual. `MiRespuesta` representa
+el voto propio en equipos y la respuesta definitiva en individual. `MiEquipo`
+incluye integrantes, votos propios del equipo, unanimidad y confirmación;
+**no se envían los votos provisionales de rivales**.
+
+La solución y las decisiones/correcciones colectivas solo se publican en
+`Resultados`. El marcador se calcula desde rondas cerradas para que los puntos
+no revelen aciertos antes del cierre. No se fabrican respuestas individuales
+en partidas por equipos; `Marcador` queda vacío y el resultado individual lleva
+una lista de respuestas vacía. La clasificación admite empates.
+
+`PartidaForm` muestra equipo, propuestas de sus miembros, consenso y marcador
+colectivo. Los botones A/B/C/D permiten cambiar el voto; **Confirmar equipo**
+solo aparece en ese modo y se habilita con unanimidad, plazo vigente y estado
+confirmado del servidor. Tras confirmar se bloquea el cambio de voto. Las
+consultas, votos y confirmaciones comparten la exclusión de operaciones del
+cliente, conservando cancelación al cerrar y el reloj oficial de la fase 5.
+
+
+### Tiempo real y funcionalidades de la fase 7
+
+REST y SQLite siguen siendo la fuente oficial de estados, votos, respuestas y
+puntos. SignalR avisa de cambios y transporta chat y reacciones. Una conexión
+`TiempoRealCliente` comparte las cookies de `Form1` y se reutiliza entre la sala
+y la partida; cada proceso WinForms mantiene una identidad independiente.
+
+El Hub autenticado `/hubs/salas` (`Hubs/SalaHub.cs`) comprueba la pertenencia al
+invocar `EntrarSala`. Los grupos `sala:CODIGO` y `equipo:ID` reciben eventos de
+`NotificadorTiempoReal`: `SalaActualizada`, `SalasPublicasActualizadas`,
+`PartidaActualizada` y `VotosEquipoActualizados`. Los votos provisionales avisan
+solo al equipo propio. El cliente vuelve a REST para obtener el estado oficial.
+Las notificaciones que llegan durante otra operación se recuperan después,
+y los controles se actualizan en el hilo de WinForms.
+
+`SupervisorPartidas` revisa cada segundo las partidas cuyo plazo ha vencido,
+utilizando el mismo `CoordinadorSalas` que REST y el chat. Ejecuta el motor,
+guarda las transiciones y notifica fuera del semáforo. Las rondas avanzan aun
+sin consultas de clientes; al reiniciar se recuperan los plazos vencidos.
+El reloj local se dibuja cada segundo y el sondeo REST de respaldo se realiza
+cada diez segundos. La reconexión automática de SignalR vuelve a incorporar la
+conexión a sus grupos; el respaldo también reintenta el primer inicio fallido
+y los cierres que hayan agotado los reintentos. Los indicadores muestran si se
+usa tiempo real o REST. Cerrar WinForms requiere volver a iniciar sesión para
+recuperar su sala; respuestas y tiempo no se reinician.
+
+`MensajeSala` conserva el chat en SQLite. La migración
+`20261124224017_ChatSalas` añade `MensajesSala`, relaciones e índice de historial.
+En espera, en individual y tras finalizar se permite chat general. Durante
+una partida por equipos se permite exclusivamente el chat privado del equipo
+actual. El servidor calcula destinatarios con los miembros autenticados de
+SQLite y utiliza `Clients.Users`; una conexión antigua no autoriza mensajes
+tras abandonar. `ChatController` devuelve los últimos 50 mensajes autorizados,
+ordenados cronológicamente. El cliente elimina duplicados por Id, recupera el
+historial tras reconectar y adapta el ámbito cuando cambia la fase.
+
+`ControlFrecuencia` limita cada cuenta a un mensaje por segundo y una reacción
+cada dos segundos, incluso con varias conexiones. Los mensajes admiten de 1 a
+250 caracteres. Aplauso, Ánimo y Sorpresa no se almacenan en SQLite.
+
+La migración `20261124224444_RevanchaSalas` sustituye el índice único de SalaId
+por uno no único. Una revancha autorizada vuelve la sala finalizada a espera
+con su código y configuración, conserva las partidas anteriores y desmarca
+a todos. Exige anfitrión y mínimo de dos jugadores (cuatro en equipos).
+La siguiente partida se crea al volver a preparar e iniciar. Las consultas
+seleccionan siempre la partida con mayor Id. Salir de una revancha en espera
+conserva los historiales y cierra la sala si ya no quedan miembros.
+
+`ClasificacionController` calcula las veinte mejores cuentas individuales por
+puntos acumulados y aciertos, y los veinte mejores resultados de equipos por
+partida. No se agrupan equipos solo por nombre. Las asignaciones históricas
+permiten distinguir individual/equipos aunque después cambie la modalidad de
+la sala. `ClasificacionForm` permite actualizar ambos listados desde las salas.
+
+| Operación | Ruta o método | Requisito |
+| --- | --- | --- |
+| Hub | `/hubs/salas` | Sesión de la misma cuenta REST |
+| Hub | `EntrarSala(codigo)` / `SalirSala()` | Pertenencia comprobada |
+| Hub | `EnviarMensaje(codigo, texto, soloEquipo)` | Ámbito oficial y límite de frecuencia |
+| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y límite de frecuencia |
+| GET | `/api/chat/{codigo}` | Miembro; solo historial autorizado |
+| POST | `/api/salas/{codigo}/revancha` | Anfitrión de sala finalizada |
+| GET | `/api/clasificacion/individual` | Autenticación |
+| GET | `/api/clasificacion/equipos` | Autenticación |
+
+Para reproducir la demostración: iniciar un servidor en localhost:5080 y cuatro
+`QuizArena.Cliente.exe`; acceder con cuentas distintas, crear sala Equipos de
+cuatro plazas, unirse por código y prepararse. Iniciar una vez, abrir chat,
+comprobar que solo el compañero recibe mensajes y votos, cambiar el voto hasta
+consenso y confirmar. Al terminar, volver a la sala, solicitar revancha,
+prepararse e iniciar otra partida; consultar después la clasificación global.
+Para probar reconexión, ejecutar clientes separados del depurador, detener el
+servidor y volverlo a iniciar sin cerrar esos clientes. El tiempo continúa.
+
+Estado detallado de verificación y siguiente paso: [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
+
+### Comprobaciones de la fase 6
+
+Validación realizada el **24 de noviembre de 2026**:
+
+- Compilación con **0 errores y 0 advertencias**, sin paquetes NuGet nuevos.
+- Migración `20261124154103_EquiposYVotaciones` aplicada y modelo EF sin cambios
+  pendientes. Respaldos de código y SQLite conservados fuera del repositorio.
+- **77 pruebas aisladas de equipos con SQLite en memoria**: reparto persistido
+  de 4 a 12 jugadores, tiempos 30/45/60, unanimidad, exclusión de votos ajenos,
+  límite de tiempo estricto, confirmación idempotente, restricciones únicas,
+  puntuación, rachas y recuperación de fases vencidas.
+- **37 comprobaciones de API de equipos**: permisos, inicio simultáneo,
+  propuestas modificables, confirmaciones simultáneas, carrera entre cambio de
+  voto y confirmación, respuesta definitiva única, privacidad y cinco rondas.
+  Se esperaron plazos reales para unanimidad automática y desacuerdo al cierre.
+- **6 comprobaciones de persistencia de equipos tras reiniciar**: asignaciones
+  y votos conservados, avance de fases vencidas y puntuación aplicada una sola vez.
+- **30 pruebas aisladas del motor individual**, **48 de API individual** y
+  **4 tras reiniciar**: respuestas definitivas, tiempos 20/20/30, puntuación,
+  resultados y clasificación conservan el comportamiento de la fase 5.
+- **67 comprobaciones de regresión**: 35 de salas y 32 de acceso, perfiles y banco.
+
+En total se superaron **269 comprobaciones automáticas**. Además se verificaron
+**12 comprobaciones nativas de entrada/códigos** con dos clientes y **20 de
+interfaz por equipos** con cuatro procesos WinForms y cuentas distintas.
+
+En la prueba nativa por equipos, el anfitrión inició una sola vez y las cuatro
+ventanas se abrieron automáticamente. Se observaron votos propios, cambio de
+voto, desacuerdo, unanimidad, confirmación por tiempo y confirmación manual con
+bloqueo en ambos compañeros. La sala, incorporaciones y preparación se montaron
+por API; la segunda ronda recibió votos de apoyo por API y las rondas 3 a 5 se
+completaron por API mientras los cuatro clientes mostraban el estado oficial.
+Todos terminaron con el mismo marcador: **Equipo 1 1200; Equipo 2 900**.
+
+Las cuentas de prueba quedaron sin sala. Se conservan las partidas finalizadas,
+los ocho jugadores anteriores con sus datos, las once categorías, las 112
+preguntas y los historiales previos; se añadió MartaQA como cuarta cuenta de
+prueba. La sala y participantes existentes del usuario no se modificaron.
+SQLite y el banco privado mantienen sus exclusiones de Git.
 
 ### Comprobaciones de la fase 5
 

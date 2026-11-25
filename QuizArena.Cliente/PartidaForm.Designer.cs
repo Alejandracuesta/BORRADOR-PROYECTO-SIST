@@ -22,6 +22,11 @@ partial class PartidaForm
         lblInfo = new Label();
         txtMarcador = new TextBox();
         btnCerrarPartida = new Button();
+        btnConfirmarEquipo = new Button();
+        btnChat = new Button { Name = "btnChat", Text = "Abrir chat", Location = new Point(525, 520), Size = new Size(200, 38) };
+        Controls.Add(btnChat);
+        lblConexion = new Label { Name = "lblConexion", Text = "Comprobando comunicación...", Location = new Point(25, 50), Size = new Size(420, 22) };
+        Controls.Add(lblConexion);
         SuspendLayout();
         //
         // lblFase
@@ -99,7 +104,7 @@ partial class PartidaForm
         //
         lblInfo.Location = new Point(25, 300);
         lblInfo.Name = "lblInfo";
-        lblInfo.Size = new Size(740, 50);
+        lblInfo.Size = new Size(535, 50);
         lblInfo.TabIndex = 7;
         lblInfo.Text = "Esperando datos";
         lblInfo.AutoSize = false;
@@ -123,6 +128,16 @@ partial class PartidaForm
         btnCerrarPartida.TabIndex = 9;
         btnCerrarPartida.Text = "Volver a la sala";
         btnCerrarPartida.UseVisualStyleBackColor = true;
+        // btnConfirmarEquipo
+        btnConfirmarEquipo.Location = new Point(580, 310);
+        btnConfirmarEquipo.Name = "btnConfirmarEquipo";
+        btnConfirmarEquipo.Size = new Size(185, 38);
+        btnConfirmarEquipo.TabIndex = 10;
+        btnConfirmarEquipo.Text = "Confirmar equipo";
+        btnConfirmarEquipo.Visible = false;
+        btnConfirmarEquipo.Enabled = false;
+        btnConfirmarEquipo.UseVisualStyleBackColor = true;
+        Controls.Add(btnConfirmarEquipo);
         Controls.Add(lblFase);
         Controls.Add(lblTiempo);
         Controls.Add(lblPregunta);
@@ -157,4 +172,7 @@ partial class PartidaForm
     private Label lblInfo;
     private TextBox txtMarcador;
     private Button btnCerrarPartida;
+    private Button btnConfirmarEquipo;
+    private Button btnChat;
+    private Label lblConexion;
 }

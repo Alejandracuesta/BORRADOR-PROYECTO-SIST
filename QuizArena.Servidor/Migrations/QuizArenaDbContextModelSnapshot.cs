@@ -41,6 +41,37 @@ namespace QuizArena.Servidor.Migrations
                     b.ToTable("Categorias");
                 });
 
+            modelBuilder.Entity("QuizArena.Servidor.Models.EquipoPartida", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Aciertos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PartidaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Puntos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Racha")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartidaId", "Nombre")
+                        .IsUnique();
+
+                    b.ToTable("EquiposPartida");
+                });
+
             modelBuilder.Entity("QuizArena.Servidor.Models.Jugador", b =>
                 {
                     b.Property<int>("Id")
@@ -69,6 +100,40 @@ namespace QuizArena.Servidor.Migrations
                         .IsUnique();
 
                     b.ToTable("Jugadores");
+                });
+
+            modelBuilder.Entity("QuizArena.Servidor.Models.MensajeSala", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("EquipoPartidaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JugadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SalaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipoPartidaId");
+
+                    b.HasIndex("JugadorId");
+
+                    b.HasIndex("SalaId", "Id");
+
+                    b.ToTable("MensajesSala");
                 });
 
             modelBuilder.Entity("QuizArena.Servidor.Models.ParticipanteSala", b =>
@@ -125,8 +190,7 @@ namespace QuizArena.Servidor.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SalaId")
-                        .IsUnique();
+                    b.HasIndex("SalaId");
 
                     b.ToTable("Partidas");
                 });
@@ -138,6 +202,9 @@ namespace QuizArena.Servidor.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Aciertos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("EquipoPartidaId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("JugadorId")
@@ -153,6 +220,8 @@ namespace QuizArena.Servidor.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EquipoPartidaId");
 
                     b.HasIndex("JugadorId");
 
@@ -268,6 +337,42 @@ namespace QuizArena.Servidor.Migrations
                     b.ToTable("Preguntas");
                 });
 
+            modelBuilder.Entity("QuizArena.Servidor.Models.RespuestaEquipo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ConfirmadaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EquipoPartidaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("EsCorrecta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Opcion")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PartidaPreguntaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PuntosGanados")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipoPartidaId");
+
+                    b.HasIndex("PartidaPreguntaId", "EquipoPartidaId")
+                        .IsUnique();
+
+                    b.ToTable("RespuestasEquipo");
+                });
+
             modelBuilder.Entity("QuizArena.Servidor.Models.RespuestaPartida", b =>
                 {
                     b.Property<int>("Id")
@@ -364,6 +469,73 @@ namespace QuizArena.Servidor.Migrations
                     b.ToTable("Salas");
                 });
 
+            modelBuilder.Entity("QuizArena.Servidor.Models.VotoEquipo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JugadorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Opcion")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PartidaPreguntaId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JugadorId");
+
+                    b.HasIndex("PartidaPreguntaId", "JugadorId")
+                        .IsUnique();
+
+                    b.ToTable("VotosEquipo");
+                });
+
+            modelBuilder.Entity("QuizArena.Servidor.Models.EquipoPartida", b =>
+                {
+                    b.HasOne("QuizArena.Servidor.Models.Partida", "Partida")
+                        .WithMany("Equipos")
+                        .HasForeignKey("PartidaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partida");
+                });
+
+            modelBuilder.Entity("QuizArena.Servidor.Models.MensajeSala", b =>
+                {
+                    b.HasOne("QuizArena.Servidor.Models.EquipoPartida", "Equipo")
+                        .WithMany()
+                        .HasForeignKey("EquipoPartidaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("QuizArena.Servidor.Models.Jugador", "Jugador")
+                        .WithMany()
+                        .HasForeignKey("JugadorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuizArena.Servidor.Models.Sala", "Sala")
+                        .WithMany()
+                        .HasForeignKey("SalaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipo");
+
+                    b.Navigation("Jugador");
+
+                    b.Navigation("Sala");
+                });
+
             modelBuilder.Entity("QuizArena.Servidor.Models.ParticipanteSala", b =>
                 {
                     b.HasOne("QuizArena.Servidor.Models.Jugador", "Jugador")
@@ -396,6 +568,11 @@ namespace QuizArena.Servidor.Migrations
 
             modelBuilder.Entity("QuizArena.Servidor.Models.PartidaJugador", b =>
                 {
+                    b.HasOne("QuizArena.Servidor.Models.EquipoPartida", "Equipo")
+                        .WithMany("Miembros")
+                        .HasForeignKey("EquipoPartidaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("QuizArena.Servidor.Models.Jugador", "Jugador")
                         .WithMany()
                         .HasForeignKey("JugadorId")
@@ -407,6 +584,8 @@ namespace QuizArena.Servidor.Migrations
                         .HasForeignKey("PartidaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Equipo");
 
                     b.Navigation("Jugador");
 
@@ -441,6 +620,25 @@ namespace QuizArena.Servidor.Migrations
                         .IsRequired();
 
                     b.Navigation("Categoria");
+                });
+
+            modelBuilder.Entity("QuizArena.Servidor.Models.RespuestaEquipo", b =>
+                {
+                    b.HasOne("QuizArena.Servidor.Models.EquipoPartida", "Equipo")
+                        .WithMany()
+                        .HasForeignKey("EquipoPartidaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuizArena.Servidor.Models.PartidaPregunta", "PartidaPregunta")
+                        .WithMany("RespuestasEquipo")
+                        .HasForeignKey("PartidaPreguntaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipo");
+
+                    b.Navigation("PartidaPregunta");
                 });
 
             modelBuilder.Entity("QuizArena.Servidor.Models.RespuestaPartida", b =>
@@ -480,13 +678,39 @@ namespace QuizArena.Servidor.Migrations
                     b.Navigation("Creador");
                 });
 
+            modelBuilder.Entity("QuizArena.Servidor.Models.VotoEquipo", b =>
+                {
+                    b.HasOne("QuizArena.Servidor.Models.Jugador", "Jugador")
+                        .WithMany()
+                        .HasForeignKey("JugadorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QuizArena.Servidor.Models.PartidaPregunta", "PartidaPregunta")
+                        .WithMany("VotosEquipo")
+                        .HasForeignKey("PartidaPreguntaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Jugador");
+
+                    b.Navigation("PartidaPregunta");
+                });
+
             modelBuilder.Entity("QuizArena.Servidor.Models.Categoria", b =>
                 {
                     b.Navigation("Preguntas");
                 });
 
+            modelBuilder.Entity("QuizArena.Servidor.Models.EquipoPartida", b =>
+                {
+                    b.Navigation("Miembros");
+                });
+
             modelBuilder.Entity("QuizArena.Servidor.Models.Partida", b =>
                 {
+                    b.Navigation("Equipos");
+
                     b.Navigation("Jugadores");
 
                     b.Navigation("Preguntas");
@@ -495,6 +719,10 @@ namespace QuizArena.Servidor.Migrations
             modelBuilder.Entity("QuizArena.Servidor.Models.PartidaPregunta", b =>
                 {
                     b.Navigation("Respuestas");
+
+                    b.Navigation("RespuestasEquipo");
+
+                    b.Navigation("VotosEquipo");
                 });
 
             modelBuilder.Entity("QuizArena.Servidor.Models.Sala", b =>

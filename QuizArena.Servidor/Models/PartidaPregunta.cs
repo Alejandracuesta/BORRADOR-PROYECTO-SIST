@@ -17,4 +17,7 @@ public class PartidaPregunta
     public DateTime? CierreUtc { get; set; }
 
     public List<RespuestaPartida> Respuestas { get; set; } = new();
+
+    public List<VotoEquipo> VotosEquipo { get; set; } = new();
+    public List<RespuestaEquipo> RespuestasEquipo { get; set; } = new();
 }

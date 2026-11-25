@@ -43,5 +43,38 @@ public record EstadoPartidaApi(
     PreguntaJuegoApi? Pregunta,
     string? MiRespuesta,
     ResultadoRondaApi? Resultado,
-    List<MarcadorJugadorApi> Marcador
+    List<MarcadorJugadorApi> Marcador,
+    EquipoActualApi? MiEquipo,
+    List<MarcadorEquipoApi>? MarcadorEquipos,
+    List<ResultadoEquipoApi>? ResultadosEquipos
+);
+
+public record VotoMiembroEquipoApi(
+    int JugadorId,
+    string Nombre,
+    string? Opcion
+);
+
+public record EquipoActualApi(
+    int Id,
+    string Nombre,
+    bool HayUnanimidad,
+    bool Confirmada,
+    List<VotoMiembroEquipoApi> Votos
+);
+
+public record MarcadorEquipoApi(
+    int EquipoId,
+    string Nombre,
+    int Puntos,
+    int Aciertos,
+    int Racha
+);
+
+public record ResultadoEquipoApi(
+    int EquipoId,
+    string Nombre,
+    string? Opcion,
+    bool EsCorrecta,
+    int PuntosGanados
 );

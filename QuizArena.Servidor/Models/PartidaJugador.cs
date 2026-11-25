@@ -15,4 +15,7 @@ public class PartidaJugador
     public int Racha { get; set; }
 
     public int Aciertos { get; set; }
+
+    public int? EquipoPartidaId { get; set; }
+    public EquipoPartida? Equipo { get; set; }
 }

@@ -14,6 +14,22 @@ public static class MotorPartidas
         return dificultad == DificultadPregunta.Dificil ? 30 : 20;
     }
 
+    public static int TiempoPregunta(
+        DificultadPregunta dificultad,
+        ModalidadSala modalidad)
+    {
+        if (modalidad == ModalidadSala.Individual)
+            return TiempoPregunta(dificultad);
+
+        return dificultad switch
+        {
+            DificultadPregunta.Facil => 30,
+            DificultadPregunta.Media => 45,
+            DificultadPregunta.Dificil => 60,
+            _ => 30
+        };
+    }
+
     public static int PuntosBase(DificultadPregunta dificultad)
     {
         return dificultad switch
@@ -71,11 +87,11 @@ public static class MotorPartidas
         partida.Fase = FasePartida.Pregunta;
 
         partida.FinFaseUtc = fechaApertura.AddSeconds(
-            TiempoPregunta(actual.Pregunta.Dificultad));
+            TiempoPregunta(actual.Pregunta.Dificultad, partida.Sala.Modalidad));
     }
 
     // Comprueba y ejecuta las transiciones pendientes.
-    public static async Task AvanzarAsync(
+    public static async Task<bool> AvanzarAsync(
         QuizArenaDbContext db,
         Partida partida,
         CancellationToken ct = default)
@@ -107,8 +123,12 @@ public static class MotorPartidas
                 var actual = partida.Preguntas.Single(
                     p => p.Orden == partida.IndicePregunta);
 
-                bool todosRespondieron =
-                    actual.Respuestas.Count == partida.Jugadores.Count;
+                bool esEquipos =
+                    partida.Sala.Modalidad == ModalidadSala.Equipos;
+
+                bool todosRespondieron = esEquipos
+                    ? actual.RespuestasEquipo.Count == partida.Equipos.Count
+                    : actual.Respuestas.Count == partida.Jugadores.Count;
 
                 bool tiempoAgotado =
                     ahora >= partida.FinFaseUtc;
@@ -120,18 +140,55 @@ public static class MotorPartidas
                     ? partida.FinFaseUtc
                     : ahora;
 
-                actual.CierreUtc = cierre;
-
-                // Una pregunta no contestada rompe la racha.
-                var respondieron = actual.Respuestas
-                    .Select(r => r.JugadorId)
-                    .ToHashSet();
-
-                foreach (var jugador in partida.Jugadores)
+                if (esEquipos)
                 {
-                    if (!respondieron.Contains(jugador.JugadorId))
-                        jugador.Racha = 0;
+                    if (tiempoAgotado)
+                    {
+                        // Confirmar automáticamente equipos unánimes.
+                        foreach (var equipo in partida.Equipos)
+                        {
+                            bool respondio = actual.RespuestasEquipo.Any(
+                                r => r.EquipoPartidaId == equipo.Id);
+
+                            if (respondio)
+                                continue;
+
+                            string? consenso = MotorEquipos.ObtenerConsenso(
+                                actual, equipo, partida.FinFaseUtc);
+
+                            if (consenso != null)
+                            {
+                                MotorEquipos.Confirmar(
+                                    actual, equipo, consenso, cierre);
+                            }
+                        }
+                    }
+
+                    // La ausencia de respuesta rompe la racha del equipo.
+                    foreach (var equipo in partida.Equipos)
+                    {
+                        bool respondio = actual.RespuestasEquipo.Any(
+                            r => r.EquipoPartidaId == equipo.Id);
+
+                        if (!respondio)
+                            equipo.Racha = 0;
+                    }
                 }
+                else
+                {
+                    // Comportamiento anterior del modo individual.
+                    var respondieron = actual.Respuestas
+                        .Select(r => r.JugadorId)
+                        .ToHashSet();
+
+                    foreach (var jugador in partida.Jugadores)
+                    {
+                        if (!respondieron.Contains(jugador.JugadorId))
+                            jugador.Racha = 0;
+                    }
+                }
+
+                actual.CierreUtc = cierre;
 
                 partida.Fase = FasePartida.Resultados;
                 partida.FinFaseUtc =
@@ -170,5 +227,6 @@ public static class MotorPartidas
 
         if (hayCambios)
             await db.SaveChangesAsync(ct);
+        return hayCambios;
     }
 }
