@@ -70,6 +70,15 @@ builder.Services.AddAuthorization();
 
 await using var app = builder.Build();
 
+// Aplicar las migraciones pendientes al arrancar. Solo añade lo que falte
+// (tablas, columnas, índices); no borra jugadores, preguntas ni partidas.
+await using (var scopeMigraciones = app.Services.CreateAsyncScope())
+{
+    var dbMigraciones = scopeMigraciones.ServiceProvider
+        .GetRequiredService<QuizArenaDbContext>();
+    await dbMigraciones.Database.MigrateAsync();
+}
+
 if (importarPreguntas)
 {
     string nombreArchivo = argumentoArchivo is null
