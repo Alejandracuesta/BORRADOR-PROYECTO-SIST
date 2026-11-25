@@ -1,0 +1,38 @@
+@QuizArena.Servidor_HostAddress = http://localhost:5080
+
+### Estado del servidor
+GET {{QuizArena.Servidor_HostAddress}}/api/estado
+Accept: application/json
+
+### Categorías y número de preguntas
+GET {{QuizArena.Servidor_HostAddress}}/api/categorias
+Accept: application/json
+
+### Preguntas (sin la respuesta correcta)
+GET {{QuizArena.Servidor_HostAddress}}/api/preguntas
+Accept: application/json
+
+### Registrar una cuenta de prueba
+POST {{QuizArena.Servidor_HostAddress}}/api/acceso/registrar
+Content-Type: application/json
+
+{
+  "nombre": "PruebaHttp",
+  "password": "cambiame123"
+}
+
+### Iniciar sesión (devuelve la cookie de sesión)
+POST {{QuizArena.Servidor_HostAddress}}/api/acceso/entrar
+Content-Type: application/json
+
+{
+  "nombre": "PruebaHttp",
+  "password": "cambiame123"
+}
+
+### Perfil de la sesión activa
+GET {{QuizArena.Servidor_HostAddress}}/api/acceso/yo
+Accept: application/json
+
+### Documento OpenAPI de toda la API
+GET {{QuizArena.Servidor_HostAddress}}/openapi/v1.json

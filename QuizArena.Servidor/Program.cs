@@ -21,6 +21,9 @@ var builder = WebApplication.CreateBuilder(argumentosWeb);
 
 // Registrar los controladores de nuestra API REST.
 builder.Services.AddControllers();
+
+// Documentación OpenAPI de la API (como la plantilla ASP.NET Core Web API).
+builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificadorTiempoReal>();
 builder.Services.AddSingleton<ControlFrecuencia>();
@@ -119,6 +122,41 @@ if (importarPreguntas)
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Documento OpenAPI con todas las rutas de la API: /openapi/v1.json
+app.MapOpenApi();
+
+// Página web para ver y probar la API (GET, POST...) desde el navegador.
+// Usa Swagger UI cargado desde internet; no necesita paquetes NuGet extra.
+app.MapGet("/swagger", () => Results.Content("""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8">
+      <title>Quiz Arena API</title>
+      <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+      <script>
+        window.onload = () => {
+          window.ui = SwaggerUIBundle({
+            url: '/openapi/v1.json',
+            dom_id: '#swagger-ui',
+            withCredentials: true
+          });
+        };
+      </script>
+    </body>
+    </html>
+    """, "text/html; charset=utf-8"))
+    .ExcludeFromDescription();
+
+// La raíz del servidor lleva directamente a la página de la API.
+app.MapGet("/", () => Results.Redirect("/swagger"))
+    .ExcludeFromDescription();
+
 app.MapHub<SalaHub>("/hubs/salas");
 
 await app.RunAsync();
