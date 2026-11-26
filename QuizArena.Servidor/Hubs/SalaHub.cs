@@ -38,6 +38,8 @@ public class SalaHub : Hub
         if (!int.TryParse(identidad, out int jugadorId))
             throw new HubException("Sesión inválida.");
 
+        await ComprobarActivoAsync(jugadorId);
+
         codigo = codigo.Trim().ToUpperInvariant();
 
         var sala = await db.Salas
@@ -129,7 +131,9 @@ private async Task<(Sala sala, int? equipoId, List<string> destinos)>
 {
     int jugadorId = ObtenerJugadorId();
 
-    codigo = codigo.Trim().ToUpperInvariant();
+    await ComprobarActivoAsync(jugadorId);
+
+        codigo = codigo.Trim().ToUpperInvariant();
 
     var sala = await db.Salas
         .AsNoTracking()
@@ -195,6 +199,7 @@ public async Task EnviarMensaje(
     try
     {
     int jugadorId = ObtenerJugadorId();
+    await ComprobarActivoAsync(jugadorId);
 
     texto = texto?.Trim() ?? "";
 
@@ -227,8 +232,7 @@ public async Task EnviarMensaje(
     db.MensajesSala.Add(mensaje);
     await db.SaveChangesAsync();
 
-    string nombre = Context.User?.Identity?.Name
-        ?? $"Jugador {jugadorId}";
+    string nombre = await db.Jugadores.Where(j => j.Id == jugadorId).Select(j => j.Nombre).SingleAsync();
 
     var dto = new MensajeSalaDto(
         mensaje.Id,
@@ -256,6 +260,7 @@ public async Task EnviarReaccion(
     try
     {
     int jugadorId = ObtenerJugadorId();
+    await ComprobarActivoAsync(jugadorId);
 
     if (tipo is not ("Aplauso" or "Animo" or "Sorpresa"))
         throw new HubException("Reacción inválida.");
@@ -266,7 +271,7 @@ public async Task EnviarReaccion(
     var reaccion = new ReaccionDto(
         sala.Codigo,
         jugadorId,
-        Context.User?.Identity?.Name ?? $"Jugador {jugadorId}",
+        await db.Jugadores.Where(j => j.Id == jugadorId).Select(j => j.Nombre).SingleAsync(),
         tipo,
         DateTime.UtcNow);
 
@@ -278,4 +283,9 @@ public async Task EnviarReaccion(
 } 
 
 
+    private async Task ComprobarActivoAsync(int id)
+    {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == id && j.Activo))
+            throw new HubException("La cuenta ya no está activa.");
+    }
 }

@@ -9,6 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Update="PerfilForm.cs"><SubType>Form</SubType></Compile>
+    <Compile Update="AdministracionForm.cs"><SubType>Form</SubType></Compile>
+    <Compile Update="HistorialForm.cs"><SubType>Form</SubType></Compile>
     <Compile Update="ClasificacionForm.cs"><SubType>Form</SubType></Compile>
     <Compile Update="ChatForm.cs"><SubType>Form</SubType></Compile>
     <Compile Update="Form1.cs">

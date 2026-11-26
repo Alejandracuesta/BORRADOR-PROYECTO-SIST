@@ -30,6 +30,7 @@ partial class Form1
         btnSalas = new Button();
         btnComprobar = new Button();
         lblEstado = new Label();
+        btnAdministracion = new Button(); btnHistorial = new Button();
         SuspendLayout();
         //
         // lblTitulo
@@ -158,7 +159,18 @@ partial class Form1
         AcceptButton = btnEntrar;
         AutoScaleDimensions = new SizeF(8F, 19F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(650, 410);
+        ClientSize = new Size(650, 470);
+        btnAdministracion.Name = "btnAdministracion";
+        btnAdministracion.Text = "Administración";
+        btnAdministracion.Location = new Point(30, 400);
+        btnAdministracion.Size = new Size(210, 38);
+        btnAdministracion.Enabled = false;
+        btnHistorial.Name = "btnHistorial";
+        btnHistorial.Text = "Historial de partidas";
+        btnHistorial.Location = new Point(260, 400);
+        btnHistorial.Size = new Size(240, 38);
+        btnHistorial.Enabled = false;
+        Controls.Add(btnAdministracion); Controls.Add(btnHistorial);
         Controls.Add(lblEstado);
         Controls.Add(btnComprobar);
         Controls.Add(btnSalir);
@@ -197,4 +209,6 @@ partial class Form1
     private Button btnSalas;
     private Button btnComprobar;
     private Label lblEstado;
+    private Button btnAdministracion;
+    private Button btnHistorial;
 }

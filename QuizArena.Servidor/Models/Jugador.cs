@@ -12,4 +12,7 @@ public class Jugador
 
     // Los perfiles anteriores a la fase 3 permanecen sin credenciales.
     public string? PasswordHash { get; set; }
+    public bool Activo { get; set; } = true;
+    public bool EsAdministrador { get; set; }
+    public DateTime? EliminadoUtc { get; set; }
 }

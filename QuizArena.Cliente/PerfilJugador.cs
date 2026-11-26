@@ -4,4 +4,5 @@ namespace QuizArena.Cliente;
 public record PerfilJugador(
     int Id,
     string Nombre,
-    DateTime FechaRegistroUtc);
+    DateTime FechaRegistroUtc,
+    bool EsAdministrador = false);

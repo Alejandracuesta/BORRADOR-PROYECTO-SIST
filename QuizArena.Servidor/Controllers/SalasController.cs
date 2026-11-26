@@ -119,6 +119,7 @@ public class SalasController : ControllerBase
 
         try
         {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
             bool yaTieneSala = await db.ParticipantesSala
                 .AnyAsync(p => p.JugadorId == jugadorId, ct);
 
@@ -208,6 +209,7 @@ public class SalasController : ControllerBase
 
         try
         {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
             bool yaTieneSala = await db.ParticipantesSala
                 .AnyAsync(p => p.JugadorId == jugadorId, ct);
 
@@ -276,6 +278,7 @@ public class SalasController : ControllerBase
 
         try
         {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
             var participante = await db.ParticipantesSala
                 .Include(p => p.Sala)
                 .SingleOrDefaultAsync(
@@ -326,6 +329,7 @@ public class SalasController : ControllerBase
 
         try
         {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
             var sala = await db.Salas
                 .Include(s => s.Participantes)
                 .SingleOrDefaultAsync(s => s.Codigo == codigo, ct);
@@ -397,6 +401,7 @@ public class SalasController : ControllerBase
 
         try
         {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
             var sala = await db.Salas
                 .Include(s => s.Participantes)
                 .SingleOrDefaultAsync(s => s.Codigo == codigo, ct);
@@ -530,6 +535,7 @@ public async Task<IActionResult> Revancha(
 
     try
     {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
         var sala = await db.Salas
             .Include(s => s.Participantes)
             .SingleOrDefaultAsync(
@@ -620,4 +626,60 @@ public async Task<IActionResult> Revancha(
                 .ToList()
         );
     }
+[HttpDelete("{codigo}")]
+public async Task<IActionResult> CancelarSala(
+    string codigo, CancellationToken ct)
+{
+    if (JugadorActual() is not int jugadorId)
+        return Unauthorized();
+
+    codigo = codigo.Trim().ToUpperInvariant();
+
+    await coordinador.Semaforo.WaitAsync(ct);
+
+    try
+    {
+        if (!await db.Jugadores.AsNoTracking().AnyAsync(j => j.Id == jugadorId && j.Activo, ct)) return Unauthorized();
+        var sala = await db.Salas
+            .Include(s => s.Participantes)
+            .SingleOrDefaultAsync(s => s.Codigo == codigo, ct);
+
+        if (sala == null)
+            return NotFound();
+
+        if (sala.CreadorId != jugadorId)
+            return Forbid();
+
+        if (sala.Estado == EstadoSala.EnPartida)
+        {
+            return Conflict(new
+            {
+                mensaje = "No puedes cancelar una partida en curso"
+            });
+        }
+
+        bool tieneHistorial = await db.Partidas
+            .AnyAsync(p => p.SalaId == sala.Id, ct);
+
+        if (tieneHistorial)
+        {
+            sala.Estado = EstadoSala.Finalizada;
+            db.ParticipantesSala.RemoveRange(sala.Participantes);
+        }
+        else
+        {
+            db.Salas.Remove(sala);
+        }
+
+        await db.SaveChangesAsync(ct);
+        await notificador.SalaAsync(codigo, ct);
+
+        return NoContent();
+    }
+    finally
+    {
+        coordinador.Semaforo.Release();
+    }
+}
+
 }

@@ -125,6 +125,11 @@ public partial class SalasForm : Form
             string codigo = salaActual.Codigo;
             await EjecutarCambioAsync(ct => api.PostAsync($"api/partidas/{codigo}/iniciar", null, ct));
         };
+        btnCancelarSala.Click += async (_, _) => {
+            if (salaActual is null || ocupado || MessageBox.Show(this, "¿Cancelar la sala? Sus partidas anteriores se conservarán.", "Cancelar sala", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+            string codigo = salaActual.Codigo;
+            await EjecutarCambioAsync(ct => api.DeleteAsync($"api/salas/{codigo}", ct));
+        };
         btnRevancha.Click += async (_, _) =>
 {
     if (salaActual == null)
@@ -418,6 +423,7 @@ public partial class SalasForm : Form
         txtCodigo.Enabled = !modificando && !enSala;
         btnPreparado.Enabled = disponible && enSala && enEspera;
         btnSalirSala.Enabled = disponible && enSala && !enPartida;
+        btnCancelarSala.Enabled = disponible && anfitrion && !enPartida;
         btnIniciarPartida.Enabled = disponible && anfitrion && enEspera && preparados;
         btnVerPartida.Enabled = disponible && enSala && (enPartida || finalizada);
         btnCopiarCodigo.Enabled = enSala;

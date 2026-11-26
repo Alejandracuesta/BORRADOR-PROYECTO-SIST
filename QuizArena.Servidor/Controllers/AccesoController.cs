@@ -36,14 +36,16 @@ public class AccesoController : ControllerBase
     {
         string nombre = datos.Nombre.Trim();
 
-        if (nombre.Length < 3)
+        if (nombre.Length is < 3 or > 20 || nombre.StartsWith("BAJA_", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { mensaje = "Nombre inválido" });
 
         var jugador = new Jugador
         {
             Nombre = nombre,
             NombreNormalizado = nombre.ToUpperInvariant(),
-            FechaRegistroUtc = DateTime.UtcNow
+            FechaRegistroUtc = DateTime.UtcNow,
+            Activo = true,
+            EsAdministrador = false
         };
 
         jugador.PasswordHash = hasher.HashPassword(jugador, datos.Clave);
@@ -75,7 +77,7 @@ public class AccesoController : ControllerBase
         var jugador = await db.Jugadores.SingleOrDefaultAsync(
             j => j.NombreNormalizado == nombreNormalizado, cancellationToken);
 
-        if (jugador is null || string.IsNullOrEmpty(jugador.PasswordHash))
+        if (jugador is null || !jugador.Activo || string.IsNullOrEmpty(jugador.PasswordHash))
             return CredencialesIncorrectas();
 
         var resultado = hasher.VerifyHashedPassword(
@@ -95,6 +97,8 @@ public class AccesoController : ControllerBase
             new(ClaimTypes.NameIdentifier, jugador.Id.ToString(CultureInfo.InvariantCulture)),
             new(ClaimTypes.Name, jugador.Nombre)
         };
+
+        if (jugador.EsAdministrador) claims.Add(new Claim(ClaimTypes.Role, "Administrador"));
 
         var identidad = new ClaimsIdentity(
             claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -121,7 +125,7 @@ public class AccesoController : ControllerBase
             .AsNoTracking()
             .SingleOrDefaultAsync(j => j.Id == id, cancellationToken);
 
-        if (jugador is null)
+        if (jugador is null || !jugador.Activo)
             return Unauthorized();
 
         return Ok(Convertir(jugador));

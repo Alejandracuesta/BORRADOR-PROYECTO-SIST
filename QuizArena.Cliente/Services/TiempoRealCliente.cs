@@ -13,6 +13,7 @@ public sealed class TiempoRealCliente : IAsyncDisposable
     private string? grupoSincronizado;
     private bool cerrado;
     public event Action<string>? SalaActualizada;
+    public event Action<string>? ChatActualizado;
     public event Action? SalasPublicasActualizadas;
     public event Action<string>? PartidaActualizada;
     public event Action<int>? VotosEquipoActualizados;
@@ -28,6 +29,7 @@ public sealed class TiempoRealCliente : IAsyncDisposable
             .WithUrl(new Uri(baseServidor, "hubs/salas"), o => o.Cookies = cookies)
             .WithAutomaticReconnect().Build();
         conexion.On<string>("SalaActualizada", c => SalaActualizada?.Invoke(c));
+        conexion.On<string>("ChatActualizado", c => ChatActualizado?.Invoke(c));
         conexion.On("SalasPublicasActualizadas", () => SalasPublicasActualizadas?.Invoke());
         conexion.On<string>("PartidaActualizada", c => PartidaActualizada?.Invoke(c));
         conexion.On<int>("VotosEquipoActualizados", id => VotosEquipoActualizados?.Invoke(id));

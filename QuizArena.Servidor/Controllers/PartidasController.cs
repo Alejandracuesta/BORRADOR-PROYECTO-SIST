@@ -592,4 +592,41 @@ public class PartidasController : ControllerBase
             marcadorEquipos,
             resultadosEquipos);
     }
+    [HttpGet("historial")]
+    public async Task<IActionResult> Historial(CancellationToken ct)
+    {
+        if (JugadorActual() is not int id) return Unauthorized();
+        var partidas = await db.PartidasJugadores.AsNoTracking()
+            .Where(j => j.JugadorId == id && j.Partida.Fase == FasePartida.Finalizada)
+            .OrderByDescending(j => j.PartidaId)
+            .Select(j => new HistorialPartidaDto(j.PartidaId, j.Partida.Sala.Codigo,
+                j.Partida.Sala.Nombre, j.Partida.CreadaUtc,
+                j.EquipoPartidaId.HasValue ? "Equipos" : "Individual",
+                j.EquipoPartidaId.HasValue ? j.Equipo!.Puntos : j.Puntos,
+                j.EquipoPartidaId.HasValue ? j.Equipo!.Aciertos : j.Aciertos)).ToListAsync(ct);
+        return Ok(partidas);
+    }
+
+    [HttpGet("{id:int}/resumen")]
+    public async Task<IActionResult> Resumen(int id, CancellationToken ct)
+    {
+        if (JugadorActual() is not int jugadorId) return Unauthorized();
+        var partida = await db.Partidas.AsNoTracking().Include(p => p.Sala)
+            .Include(p => p.Jugadores).ThenInclude(j => j.Jugador).Include(p => p.Equipos)
+            .SingleOrDefaultAsync(p => p.Id == id, ct);
+        if (partida is null) return NotFound();
+        if (!partida.Jugadores.Any(j => j.JugadorId == jugadorId)) return Forbid();
+        if (partida.Fase != FasePartida.Finalizada) return Conflict(new { mensaje = "La partida todavía no ha terminado" });
+        var jugadores = partida.Jugadores.OrderByDescending(j => j.Puntos).ThenByDescending(j => j.Aciertos)
+            .Select(j => new ResultadoJugadorDto(j.JugadorId, j.Jugador.Nombre,
+                j.EquipoPartidaId.HasValue ? partida.Equipos.Single(e => e.Id == j.EquipoPartidaId).Puntos : j.Puntos,
+                j.EquipoPartidaId.HasValue ? partida.Equipos.Single(e => e.Id == j.EquipoPartidaId).Aciertos : j.Aciertos,
+                j.EquipoPartidaId)).ToList();
+        var equipos = partida.Equipos.OrderByDescending(e => e.Puntos).ThenByDescending(e => e.Aciertos)
+            .Select(e => new ResultadoEquipoHistoricoDto(e.Id, e.Nombre, e.Puntos, e.Aciertos, jugadores.Where(j => j.EquipoId == e.Id).ToList())).ToList();
+        int maximo = equipos.Count > 0 ? equipos.Max(e => e.Puntos) : jugadores.Max(j => j.Puntos);
+        var ganadores = equipos.Count > 0 ? equipos.Where(e => e.Puntos == maximo).Select(e => e.Nombre) : jugadores.Where(j => j.Puntos == maximo).Select(j => j.Nombre);
+        return Ok(new ResumenPartidaDto(partida.Id, partida.Sala.Codigo, partida.CreadaUtc,
+            equipos.Count > 0 ? "Equipos" : "Individual", string.Join(", ", ganadores) + $" ({maximo} puntos)", jugadores, equipos));
+    }
 }

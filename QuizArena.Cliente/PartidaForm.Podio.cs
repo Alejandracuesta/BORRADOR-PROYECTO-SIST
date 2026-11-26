@@ -98,7 +98,12 @@ public partial class PartidaForm
 
         if (!finalizada) return;
 
-        var marcador = estado.Marcador;
+        // En equipos los puntos pertenecen al equipo, no al marcador individual.
+        var marcador = estado.MarcadorEquipos is { Count: > 0 }
+            ? estado.MarcadorEquipos.Select(e => new MarcadorJugadorApi(
+                e.EquipoId == estado.MiEquipo?.Id ? jugadorId : -e.EquipoId,
+                e.Nombre, e.Puntos, e.Aciertos, e.Racha)).ToList()
+            : estado.Marcador;
         int[] posiciones = CalcularPosiciones(marcador);
 
         for (int i = 0; i < ColumnasPodio.Length; i++)

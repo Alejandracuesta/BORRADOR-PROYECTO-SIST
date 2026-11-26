@@ -50,7 +50,21 @@ partial class ChatForm
         Controls.Add(btnSorpresa);
         txtMensaje.MaxLength = 250;
         lstMensajes.HorizontalScrollbar = true;
-        ClientSize = new Size(600, 500);
+        btnEditarMensaje = new Button();
+        btnEditarMensaje.Enabled = false;
+        btnEditarMensaje.Name = "btnEditarMensaje";
+        btnEditarMensaje.Text = "Editar seleccionado";
+        btnEditarMensaje.Location = new Point(20, 490);
+        btnEditarMensaje.Size = new Size(200, 32);
+        Controls.Add(btnEditarMensaje);
+        btnEliminarMensaje = new Button();
+        btnEliminarMensaje.Enabled = false;
+        btnEliminarMensaje.Name = "btnEliminarMensaje";
+        btnEliminarMensaje.Text = "Eliminar seleccionado";
+        btnEliminarMensaje.Location = new Point(240, 490);
+        btnEliminarMensaje.Size = new Size(220, 32);
+        Controls.Add(btnEliminarMensaje);
+        ClientSize = new Size(600, 545);
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         StartPosition = FormStartPosition.CenterParent;
@@ -60,6 +74,8 @@ partial class ChatForm
         ResumeLayout(false);
         PerformLayout();
     }
+    private Button btnEditarMensaje = null!;
+    private Button btnEliminarMensaje = null!;
     private Label lblAmbitoChat = null!;
     private ListBox lstMensajes = null!;
     private TextBox txtMensaje = null!;
