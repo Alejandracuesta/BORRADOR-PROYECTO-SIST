@@ -91,3 +91,22 @@ No repetir los scripts `work/fase8/implementar_*.py`: ya están ejecutados.
 El cliente y servidor de prueba están detenidos; VS queda en PerfilForm diseñador.
 Para reproducir la validación: `dotnet test QuizArena.sln`. Las pruebas crean
 sus propias bases temporales y no requieren tocar quizarena.db.
+
+## Comprobación de entrega limpia
+
+Se exportó el código confirmado en fb9236f a una carpeta nueva, sin SQLite,
+binarios, proyectos auxiliares ni configuración local. Restore y build de sus
+**tres proyectos** terminaron con 0 errores y 0 advertencias, y sus **19 casos
+xUnit** pasaron de nuevo, sin omisiones. Resultado:
+`.../te/outputs/fase8-pruebas/entrega-limpia.trx`.
+
+La fase 8 se confirmó en **5d43295**. El commit remoto API **919a7e8** se integró
+sin descartar sus mejoras en **fb9236f**: HTML Swagger original, acceso desde raíz,
+apertura del navegador y ejemplos HTTP. Se corrigió el campo de credenciales del
+archivo .http a `clave`. La solución versionada contiene servidor, cliente y
+pruebas; los cambios locales previos de WebApplication1 permanecen sin confirmar.
+
+La implementación está terminada. La única acción de configuración pendiente
+es habilitar una cuenta real administradora mediante el comando local descrito
+arriba, porque la revisión automática rechazó ejecutarlo. El resultado de la
+publicación queda recogido en el informe local final y en el estado de origin/main.

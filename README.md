@@ -192,6 +192,11 @@ respuestas, votos y confirmaciones se apoyaron en REST. Los cambios de contrase�
 bajas de cuenta y permisos de borrado se verificaron automáticamente; no se
 presentan como una secuencia manual completa de esos botones.
 
+Una exportación limpia del código, con solo servidor, cliente y pruebas,
+también restauró, compiló con 0 errores y 0 advertencias y superó los mismos
+19 casos xUnit. Esta comprobación valida la entrega sin depender del proyecto
+auxiliar local ni de la base del desarrollador.
+
 Los nuevos diseñadores de perfil, administración e historial se abrieron en
 Visual Studio. Compilación: **0 errores y 0 advertencias**. El código de pruebas,
 formularios y migraciones forma parte de la solución. SQLite, archivos privados,
