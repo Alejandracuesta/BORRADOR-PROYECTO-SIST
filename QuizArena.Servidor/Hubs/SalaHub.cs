@@ -263,13 +263,6 @@ public async Task EnviarReaccion(
     var (sala, _, destinos) =
         await ObtenerDestinatariosAsync(codigo);
 
-    if (!frecuencia.Permitir(
-        jugadorId, "reaccion", TimeSpan.FromSeconds(2)))
-    {
-        throw new HubException(
-            "Espera antes de enviar otra reacción.");
-    }
-
     var reaccion = new ReaccionDto(
         sala.Codigo,
         jugadorId,

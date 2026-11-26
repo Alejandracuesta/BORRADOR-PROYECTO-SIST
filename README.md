@@ -63,7 +63,7 @@ QuizArena.sln
 │   │   └── MotorEquipos.cs
 │   ├── Datos/
 │   │   ├── preguntas.json
-│   │   └── preguntas_trivial_100_quizarena.json   Solo local, excluido de Git
+│   │   └── preguntas_trivial_100_quizarena.json   Banco propio incluido en Git
 │   ├── Migrations/
 │   └── Properties/launchSettings.json
 └── QuizArena.Cliente
@@ -191,10 +191,10 @@ importador los ignora. `Datos/preguntas_trivial_100_quizarena.md` contiene el
 mismo banco en formato legible, con cada opción marcada como `[CORRECTA]` o
 `[INCORRECTA]`.
 
-El archivo sigue listado en `.gitignore`; como las preguntas son propias, puede
-retirarse de esa lista para incluirlo en Git. Mientras siga excluido, un clon
-nuevo necesita disponer de ese archivo local para reproducir el banco completo
-de 112 preguntas.
+El banco marcado como `Propias` ya está incluido en Git desde el commit
+`abff1be` (`preguntas`). Un clon nuevo dispone de los dos JSON para importar
+el banco completo de 112 preguntas. SQLite sigue siendo local y no se versiona.
+Cualquier otro banco sin autorización de publicación debe mantenerse excluido.
 
 Con el servidor detenido, abrir una terminal en el proyecto servidor:
 
@@ -359,8 +359,8 @@ para ejecución; su código visual se conserva en `SalasForm.Designer.cs`.
   participante más antiguo. Una sala en espera se elimina al salir el último;
   una sala finalizada conserva su historial y elimina solo la pertenencia activa.
 
-Un `System.Windows.Forms.Timer` consulta los datos cada dos segundos sin solapar
-peticiones. El sondeo conserva la selección pública y los cambios del anfitrión
+Desde la fase 7, SignalR notifica los cambios y un temporizador consulta REST
+cada diez segundos como respaldo, sin solapar peticiones. El sondeo conserva la selección pública y los cambios del anfitrión
 pendientes de guardar. Al cerrar la ventana se detiene el temporizador y se
 cancelan sus peticiones, conservando el cliente HTTP del formulario de acceso.
 Una sesión caducada devuelve al acceso para volver a identificarse.
@@ -369,7 +369,7 @@ Una sesión caducada devuelve al acceso para volver a identificarse.
 pertenencia guardada. Las salas, participantes y preparación persisten al
 reiniciar el servidor. La lista representa miembros, no presencia de red: esta
 fase no detecta desconexiones. Desde la fase 6 se inician partidas individuales
-y por equipos. SignalR y reconexión avanzada quedan para la fase 7.
+y por equipos. La fase 7 incorpora SignalR y recuperación de la conexión.
 
 ### API de salas
 
@@ -500,8 +500,9 @@ Para probar una partida completa:
    y se conservarán los resultados de la anterior.
 
 Cerrar la pantalla durante el juego no abandona ni pausa la partida. Se puede
-volver a entrar desde la sala con el tiempo que quede. En esta fase no se inicia
-la revancha ni SignalR. El modo equipos se incorpora a continuación.
+volver a entrar desde la sala con el tiempo que quede. La fase 7 incorpora
+SignalR y la opción de solicitar revancha tras finalizar. El modo equipos se
+describe a continuación.
 
 ### Entrada automática y códigos de sala (fase 6.1)
 
@@ -651,9 +652,11 @@ tras abandonar. `ChatController` devuelve los últimos 50 mensajes autorizados,
 ordenados cronológicamente. El cliente elimina duplicados por Id, recupera el
 historial tras reconectar y adapta el ámbito cuando cambia la fase.
 
-`ControlFrecuencia` limita cada cuenta a un mensaje por segundo y una reacción
-cada dos segundos, incluso con varias conexiones. Los mensajes admiten de 1 a
-250 caracteres. Aplauso, Ánimo y Sorpresa no se almacenan en SQLite.
+`ControlFrecuencia` limita cada cuenta a un mensaje de chat por segundo, incluso
+con varias conexiones. Los mensajes admiten de 1 a 250 caracteres. Por petición
+del usuario, las reacciones Aplauso, Ánimo y Sorpresa pueden enviarse seguidas,
+sin espera de dos segundos ni excepción por repetirlas. No se almacenan en
+SQLite y conservan la validación de tipo y de destinatarios autorizados.
 
 La migración `20261124224444_RevanchaSalas` sustituye el índice único de SalaId
 por uno no único. Una revancha autorizada vuelve la sala finalizada a espera
@@ -674,7 +677,7 @@ la sala. `ClasificacionForm` permite actualizar ambos listados desde las salas.
 | Hub | `/hubs/salas` | Sesión de la misma cuenta REST |
 | Hub | `EntrarSala(codigo)` / `SalirSala()` | Pertenencia comprobada |
 | Hub | `EnviarMensaje(codigo, texto, soloEquipo)` | Ámbito oficial y límite de frecuencia |
-| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y límite de frecuencia |
+| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y destinatarios autorizados; sin espera entre reacciones |
 | GET | `/api/chat/{codigo}` | Miembro; solo historial autorizado |
 | POST | `/api/salas/{codigo}/revancha` | Anfitrión de sala finalizada |
 | GET | `/api/clasificacion/individual` | Autenticación |
@@ -690,6 +693,53 @@ Para probar reconexión, ejecutar clientes separados del depurador, detener el
 servidor y volverlo a iniciar sin cerrar esos clientes. El tiempo continúa.
 
 Estado detallado de verificación y siguiente paso: [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
+
+### Comprobaciones de la fase 7
+
+Validación completada el **26 de noviembre de 2026**:
+
+- Solución completa compilada con **0 errores y 0 advertencias**; modelo EF sin
+  cambios pendientes y ocho migraciones aplicadas. No se recreó SQLite.
+- **32 comprobaciones nuevas de reacciones** con cuatro sesiones SignalR reales:
+  dos aplausos aceptados en **9 ms**, ráfagas mixtas y veinte envíos concurrentes
+  desde dos conexiones de una cuenta. Se verificaron autenticación, pertenencia,
+  tipos válidos, privacidad bidireccional, ausencia de reacciones en el historial
+  y finalización de una partida completa después de los envíos.
+- **Doble clic real en WinForms** para Aplauso, Ánimo y Sorpresa: llegaron las dos
+  reacciones de cada tipo y Visual Studio continuó ejecutando el servidor con el
+  depurador conectado, sin excepción por frecuencia.
+- La validación anterior reunió **280 comprobaciones**: 12 de SignalR, 39 de
+  chat, 29 de supervisor/revancha/clasificación, 77 de equipos, 48 individuales,
+  35 de salas, 32 de acceso/banco, 4 de clasificación frente a SQLite y 4 tras
+  reiniciar. La comprobación antigua que exigía bloquear reacciones rápidas queda
+  sustituida por las 32 nuevas; el límite de un mensaje de chat por segundo se
+  conserva. Estos son resultados de las distintas sesiones, no una nueva
+  ejecución completa de aquellas pruebas.
+- Cuatro clientes WinForms entraron automáticamente con un único inicio del
+  anfitrión. Se observaron chat privado sin recepción rival, cambio de voto,
+  unanimidad, confirmación con bloqueo y cambio del chat a general al finalizar.
+  La revancha abrió cuatro partidas nuevas en la misma sala, con puntos y votos
+  independientes. Los resultados de ambas quedaron guardados.
+- Reinicio real del servidor con esos clientes abiertos: indicadores sin SignalR,
+  botones protegidos y errores de conexión controlados. Al volver el servidor,
+  recuperaron la sesión y la partida; el supervisor avanzó el plazo vencido y
+  conservó exactamente decisiones definitivas y puntos. La primera partida
+  visual terminó 400–0 y la revancha 400–200.
+- Diseñadores `ChatForm` y `ClasificacionForm` abiertos en Visual Studio. Se
+  corrigieron inicializadores y asignaciones encadenadas de la clasificación
+  para que sus controles se vean y puedan editarse también en el diseñador.
+- Auditoría de **633 filas anteriores**, con integridad SQLite correcta y cero
+  referencias inválidas. Se mantienen 10 jugadores, 11 categorías, 112 preguntas,
+  9 mensajes y los 19 historiales anteriores; se añade una partida de prueba.
+  Solo se liberaron las membresías temporales QA y se transfirió el anfitrión
+  de su sala al salir. Las cuentas QA quedan sin sala y los historiales se
+  conservan. SQLite sigue excluido de Git; se respeta el banco propio que ya
+  estaba incluido en el repositorio.
+
+La fase 7 queda completada con el cambio de reacciones solicitado. El estado y
+las rutas de las evidencias están recogidos en [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
+La siguiente fase es la 8: pruebas integrales, corrección de incidencias y
+presentación final.
 
 ### Comprobaciones de la fase 6
 
