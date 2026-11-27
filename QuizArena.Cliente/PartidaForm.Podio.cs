@@ -46,7 +46,7 @@ public partial class PartidaForm
             Location = new Point(0, 0),
             Size = new Size(740, 60),
             Font = new Font("Segoe UI", 16F, FontStyle.Bold),
-            ForeColor = Color.DarkGoldenrod,
+            ForeColor = TemaTrivial.Amarillo,
             TextAlign = ContentAlignment.MiddleCenter
         };
         pnlPodio.Controls.Add(lblEnhorabuena);
@@ -62,6 +62,7 @@ public partial class PartidaForm
                 Location = new Point(x, yBloque),
                 Size = new Size(AnchoColumnaPodio, alto),
                 Font = new Font("Segoe UI", 28F, FontStyle.Bold),
+                ForeColor = TemaTrivial.TextoOscuro,
                 TextAlign = ContentAlignment.MiddleCenter,
                 BorderStyle = BorderStyle.FixedSingle
             };

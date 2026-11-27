@@ -29,6 +29,7 @@ public partial class PartidaForm : Form
     {
         InitializeComponent();
         CrearPodio();
+        AplicarTemaPartida();
         Disposed += (_, _) => LiberarRecursos();
     }
 
@@ -261,6 +262,7 @@ public partial class PartidaForm : Form
                     ? "Selecciona una respuesta antes de que termine el tiempo."
                     : $"Respuesta enviada: {estado.MiRespuesta}. Esperando al resto de jugadores.";
         }
+        ResaltarOpciones(estado);
         MostrarMarcador(estado);
         MostrarPodio(estado);
         ActualizarTiempo();

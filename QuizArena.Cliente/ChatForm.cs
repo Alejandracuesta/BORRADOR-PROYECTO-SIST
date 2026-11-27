@@ -17,6 +17,7 @@ public partial class ChatForm : Form
     public ChatForm()
     {
         InitializeComponent();
+        TemaTrivial.Aplicar(this);
     }
 
     public ChatForm(

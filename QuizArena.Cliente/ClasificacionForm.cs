@@ -11,6 +11,7 @@ public partial class ClasificacionForm : Form
     public ClasificacionForm()
     {
         InitializeComponent();
+        TemaTrivial.Aplicar(this);
     }
 
     public ClasificacionForm(HttpClient cliente) : this()

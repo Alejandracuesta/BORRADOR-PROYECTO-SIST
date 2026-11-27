@@ -32,6 +32,7 @@ public partial class SalasForm : Form
     public SalasForm()
     {
         InitializeComponent();
+        TemaTrivial.Aplicar(this);
         Disposed += (_, _) => LiberarRecursos();
     }
 

@@ -20,6 +20,17 @@ public partial class Form1 : Form
     public Form1()
     {
         InitializeComponent();
+
+        // Aspecto de trivial: colores, título grande y rueda de colores.
+        TemaTrivial.Aplicar(this);
+        lblTitulo.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
+        Controls.Add(new RuedaTrivial
+        {
+            Name = "ruedaTrivial",
+            Location = new Point(480, 50),
+            Size = new Size(140, 140)
+        });
+
         httpClient = new HttpClient(new HttpClientHandler
 {
     UseCookies = true,
