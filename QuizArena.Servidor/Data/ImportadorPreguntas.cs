@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using QuizArena.Servidor.DTOs;
 using QuizArena.Servidor.Models;
+using QuizArena.Servidor.Services;
 
 namespace QuizArena.Servidor.Data;
 
@@ -81,29 +82,12 @@ public static class ImportadorPreguntas
                 throw new InvalidDataException(
                     $"Categoría inválida en pregunta {i + 1}.");
 
-            if (enunciado.Length is < 10 or > 300)
-                throw new InvalidDataException(
-                    $"Enunciado inválido en pregunta {i + 1}.");
-
-            if (opciones.Any(o => o.Length is < 1 or > 150) ||
-                opciones.Distinct(StringComparer.OrdinalIgnoreCase).Count() != 4)
-                throw new InvalidDataException(
-                    $"Las opciones son inválidas en pregunta {i + 1}.");
-
-            if (!Enum.TryParse<DificultadPregunta>(
-                    dificultadTexto, true, out var dificultad) ||
-                !Enum.IsDefined(dificultad))
-                throw new InvalidDataException(
-                    $"Dificultad inválida en pregunta {i + 1}.");
-
-            if (correcta is not ("A" or "B" or "C" or "D"))
-                throw new InvalidDataException(
-                    $"Respuesta correcta inválida en pregunta {i + 1}.");
-
-            if (fuente.Length is < 2 or > 100 ||
-                licencia.Length is < 2 or > 50)
-                throw new InvalidDataException(
-                    $"Fuente o licencia inválida en pregunta {i + 1}.");
+            var guardar = new PreguntaGuardarDto { CategoriaId = 1,
+                Enunciado = enunciado, Dificultad = dificultadTexto,
+                OpcionA = opciones[0], OpcionB = opciones[1], OpcionC = opciones[2], OpcionD = opciones[3],
+                Correcta = correcta, Fuente = fuente, Licencia = licencia };
+            string? error = ValidadorPreguntas.Validar(guardar, out var dificultad);
+            if (error != null) throw new InvalidDataException($"Pregunta {i + 1}: {error}");
 
             string clavePregunta = enunciado.ToUpperInvariant();
 

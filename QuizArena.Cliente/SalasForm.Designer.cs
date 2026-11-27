@@ -53,9 +53,15 @@ partial class SalasForm
         ((System.ComponentModel.ISupportInitialize)nudMaxJugadores).BeginInit();
         btnChatSala = new Button { Name = "btnChatSala", Text = "Abrir chat", Location = new Point(20, 500), Size = new Size(185, 35) };
         grpSala.Controls.Add(btnChatSala);
+        btnCancelarSala = new Button();
+        btnCancelarSala.Name = "btnCancelarSala";
+        btnCancelarSala.Text = "Cancelar sala";
+        btnCancelarSala.Location = new Point(230, 545);
+        btnCancelarSala.Size = new Size(205, 35);
+        grpSala.Controls.Add(btnCancelarSala);
         btnRevancha = new Button { Name = "btnRevancha", Text = "Solicitar revancha", Location = new Point(230, 500), Size = new Size(205, 35) };
         grpSala.Controls.Add(btnRevancha);
-        lblConexion = new Label { Name = "lblConexion", Text = "Comprobando comunicación...", Location = new Point(20, 545), Size = new Size(440, 24) };
+        lblConexion = new Label { Name = "lblConexion", Text = "Comprobando comunicación...", Location = new Point(20, 585), Size = new Size(440, 24) };
         grpSala.Controls.Add(lblConexion);
         btnClasificacion = new Button { Name = "btnClasificacion", Text = "Clasificación global", Location = new Point(20, 270), Size = new Size(200, 36) };
         grpBuscador.Controls.Add(btnClasificacion);
@@ -81,7 +87,7 @@ partial class SalasForm
         //
         grpSala.Location = new Point(480, 15);
         grpSala.Name = "grpSala";
-        grpSala.Size = new Size(485, 600);
+        grpSala.Size = new Size(485, 640);
         grpSala.TabIndex = 2;
         grpSala.Text = "Sala de espera";
         //
@@ -332,7 +338,7 @@ partial class SalasForm
         //
         // lblAviso
         //
-        lblAviso.Location = new Point(20, 575);
+        lblAviso.Location = new Point(20, 615);
         lblAviso.Name = "lblAviso";
         lblAviso.TabIndex = 7;
         lblAviso.Text = "Todos preparados: el anfitrión puede iniciar.";
@@ -388,7 +394,7 @@ partial class SalasForm
         grpSala.Controls.Add(lblAviso);
         AutoScaleDimensions = new SizeF(8F, 19F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1000, 650);
+        ClientSize = new Size(1000, 690);
         Font = new Font("Segoe UI", 10F);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -441,6 +447,7 @@ partial class SalasForm
     private Button btnIniciarPartida;
     private Button btnVerPartida;
     private Button btnChatSala;
+    private Button btnCancelarSala;
     private Button btnRevancha;
     private Label lblConexion;
     private Button btnClasificacion;

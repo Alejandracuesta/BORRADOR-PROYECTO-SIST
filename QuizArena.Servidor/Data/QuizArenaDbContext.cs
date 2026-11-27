@@ -45,6 +45,8 @@ public class QuizArenaDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         var jugador = modelBuilder.Entity<Jugador>();
+        jugador.Property(j => j.Activo).HasDefaultValue(true);
+        jugador.Property(j => j.EsAdministrador).HasDefaultValue(false);
 
         jugador.Property(j => j.Nombre)
             .IsRequired()

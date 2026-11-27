@@ -1,81 +1,120 @@
-# Quiz Arena — continuar fase 7
+# Quiz Arena — estado final de la fase 7
 
-## Situación al guardar este punto
-**Implementación funcional completa**, compilada con 0 errores y 0 advertencias.
-No declarar la validación completa hasta terminar los pasos pendientes de abajo.
-Fecha local: 25 de noviembre de 2026.
-Repositorio: `C:/Users/Juan/Desktop/SIST` (base inicial `9875e7d`, fase 6 ya confirmada).
-Instrucciones exactas: `C:/Users/Juan/.codex/attachments/dddbc3cc-0d18-43b6-bf0d-f570bf7f83fc/Texto pegado.txt`.
-Copia, scripts y evidencias: `C:/Users/Juan/Documents/Codex/2026-11-23/te/work/fase7`.
+Fecha local: **26 de noviembre de 2026**. **Implementación y validación completadas**.
+Repositorio: `C:/Users/Juan/Desktop/SIST`; HEAD al retomar: `3d1ae3d` (`podio`).
+Instrucciones de referencia: `C:/Users/Juan/.codex/attachments/dddbc3cc-0d18-43b6-bf0d-f570bf7f83fc/Texto pegado.txt`.
+Evidencias locales: `C:/Users/Juan/Documents/Codex/2026-11-23/te/work/fase7`.
+Informe final: `C:/Users/Juan/Documents/Codex/2026-11-23/te/outputs/QuizArena-Fase7-validacion.txt`.
 
-## Implementado
-- SignalR.Client 10.0.14 y sesión de cookies compartida; SalaHub autenticado, grupos sala/equipo y NotificadorTiempoReal.
-- Eventos de salas/partidas/votos; refrescos pendientes y REST de respaldo cada 10s; reloj local cada segundo.
-- Chat general y privado por equipo, historial autorizado de últimos 50, mensajes de 1–250 caracteres, frecuencia por cuenta 1s y reacciones 2s.
-- ChatForm, ClasificacionForm y botones en diseñadores; chat cambia de ámbito tras terminar equipos y recupera historial al reconectar.
-- Revancha: prepara misma sala, desmarca a todos, consultas seleccionan última partida; puntuación y votos nuevos independientes.
-- Conservación del historial al salir de una revancha en espera; clasificación distingue modo histórico por asignación de equipo aunque cambie la modalidad de la sala.
-- SupervisorPartidas cada segundo bajo mismo semáforo; notificaciones del supervisor fuera del semáforo.
-- Reconexión automática, reintento inicial y tras cierre, reincorporación a grupos e indicadores WinForms.
-- Clasificación individual acumulada y mejores resultados de equipos por partida, autenticadas.
-- README funcional actualizado. Sin commit/push.
-- **Conservada la puntuación individual por rapidez que YA EXISTÍA en HEAD.** Las pruebas antiguas de puntos fijos no son válidas; no cambiar la regla del usuario.
+## Cambio solicitado al continuar
 
-## Migraciones APLICADAS
-1. `20261124224017_ChatSalas` — solo crea MensajesSala e índices/relaciones.
-2. `20261124224444_RevanchaSalas` — solo sustituye índice único SalaId por no único.
-Ocho migraciones totales. Base original conservada. No borrar/recrear SQLite.
-Respaldos en `.../te/outputs/QuizArena-antes-fase7.zip` y `quizarena-antes-fase7.db`.
-Instantánea privada de filas previas: `work/fase7/antes-fase7.json`, no publicar ni imprimir hashes.
-Comprobar datos con `python -X utf8 work/fase7/verificar_integridad.py` desde el workspace.
+El usuario pidió expresamente quitar la espera de dos segundos entre reacciones.
+Se eliminó el condicional y su `HubException` de `SalaHub.EnviarReaccion`.
+Aplauso, Ánimo y Sorpresa admiten envíos consecutivos. Se conservan autenticación,
+pertenencia, tipo válido, privacidad por equipo y carácter efímero de las reacciones.
+El límite de chat de un mensaje por segundo sigue activo.
+No se han cambiado las opciones de excepciones ni de seguridad de Visual Studio.
 
-## Verificación automática SUPERADA (276)
-- 12 SignalR real: cookies, rechazo anónimo/grupo ajeno, avisos de listado, incorporación e inicio. `resultado-71.txt`.
-- 39 chat real con cuatro conexiones: privacidad bidireccional, historial, ámbito, mensajes y reacciones/frecuencia, salida. `resultado-72.txt`.
-- 29 supervisor/revancha/clasificación: 50s sin REST, dos partidas de equipos y una individual consecutivas en la misma sala; todos salen. `resultado-73-75.txt`.
-- 77 aisladas de equipos con SQLite, repartos 4–12, puntuaciones, rachas, límites e idempotencia. `resultado-regresion-equipos.json` y `regresion-equipos-v2.log`.
-- 48 aisladas individuales adaptadas a rapidez real, tres dificultades, rachas y recuperación. `regresion-individual-final.log`.
-- 35 salas y 32 acceso/banco. `work/resultado-fase7-salas.json` y `work/resultado-fase7-acceso.json`. Su sala temporal final ya se retiró.
-- 4 comparación clasificación/SQL y conservación tras cambiar modalidad. `resultado-clasificacion.json`.
-- Integridad original comprobada con ocho migraciones, foreign_key_check vacío e integrity_check ok.
+Además se corrigió `ClasificacionForm.Designer.cs`: propiedades individuales en
+lugar de inicializadores de objetos y asignaciones encadenadas que el diseñador
+no interpretaba. ChatForm y ClasificacionForm se abrieron y revisaron en el diseñador.
 
-## Verificación NATIVA realizada
-- Cuatro WinForms con CarlosQA, LuciaQA, PabloQA y MartaQA; misma sala privada `4F63D090`, nombre Validación visual fase 7.
-- Sala/entradas/preparación montadas por API. Un clic REAL del anfitrión abre cuatro partidas automáticamente, todas conectadas en tiempo real.
-- Primera ronda: Carlos B, Pablo A; cambio Pablo a B, unanimidad y confirmación manual, bloqueo visible. Rival sin responder obtiene cero al plazo.
-- Chat privado enviado manualmente por Pablo: “Equipo 1: mensaje privado de prueba fase 7.”. Carlos recupera mensaje; Lucía abre historial vacío.
-- Reacciones Aplauso reales vistas por compañeros.
-- ClasificacionForm y distribución SalasForm inspeccionadas con datos reales; indicadores conectados visibles.
-- El chat cambia automáticamente a general al finalizar.
-- Primera partida visual `PartidaId=17` finalizada, Equipo1 400, Equipo2 0; sigue en la sala con los cuatro participantes.
-- Evidencias: sala-visual.json, final-visual-1.json, reinicio-visual.json y decisiones-antes-reinicio.json.
-- El archivo reinicio-visual.json se preparó para reinicio en ronda 4, **pero aún NO se ha reiniciado el servidor**; no contarlo como prueba pasada.
+## Funcionalidad terminada
 
-## PENDIENTE (seguir desde aquí)
-1. Terminar prueba visual de revancha: cerrar chats/volver a sala en los cuatro clientes, solicitar revancha, preparar e iniciar segunda partida; observar cuatro aperturas y cero puntos. Completarla con apoyo API y verificar dos historiales.
-2. Interrumpir/reiniciar servidor manteniendo clientes abiertos. Verificar indicadores desconectados, botones protegidos, recuperación de sesión/grupos/votos y plazos sin pausa. Falta esta prueba real.
-3. Revisar nuevos diseñadores ChatForm y ClasificacionForm, compilar finalmente y ejecutar EF has-pending-model-changes.
-4. Auditoría git diff --check, exclusiones DB/banco, secretos, integridad final. README validación y outputs/QuizArena-Fase7-validacion.txt con resultados reales y límites.
-5. Cerrar clientes temporales, dejar VS en diseñador, liberar solo membresías QA de la sala 4F63D090 tras finalizar; conservar historiales y registros del usuario.
+- SignalR.Client 10.0.14; cookies REST compartidas, SalaHub autenticado y grupos sala/equipo.
+- Eventos de salas, partidas y votos; refrescos pendientes, REST de respaldo cada 10s y reloj local de 1s.
+- Chat general/privado, últimos 50 mensajes autorizados, cambio de ámbito al finalizar y recuperación al reconectar.
+- Revancha en la misma sala, preparación reiniciada y partidas nuevas con resultados y votos independientes.
+- Reconexión automática, reintento inicial/tras cierre, reincorporación a grupos e indicadores WinForms.
+- Supervisor de plazos cada segundo, semáforo compartido y notificaciones fuera del bloqueo.
+- Clasificación individual acumulada y mejores resultados de equipos por partida; modo histórico independiente del modo actual de la sala.
+- Historial conservado al salir de revancha en espera y clasificación autenticada.
+- Se conservan la puntuación individual por rapidez y el podio que ya existían en HEAD.
 
-## Bloqueo de interfaz y entorno actual
-- Visual Studio abierto, servidor escuchando 5080 y cuatro clientes reales aún abiertos.
-- Avisos auxiliares de Windows de pruebas fallidas de reporte ya corregidas llevaron a diálogos Just-In-Time y Attach Security Warning para RegresionEquipos.exe. NO aceptar estos avisos.
-- Se pidió al usuario pulsar Don't Attach en todos hasta ver el editor. Respondió que los cerró, pero última captura aún mostraba un aviso: reobservar antes de actuar. El último pedido asíncrono indica cerrar TODOS los avisos seguidos.
-- Normas de control de Windows prohíben actuar sobre solicitudes de seguridad: usuario debe cerrarlas. Esto solo bloquea la prueba de parada/reinicio; los formularios del juego funcionan.
-- Detener procesos lanzados desde VS desde el propio VS. Shell sandbox devuelve Acceso denegado al intentar Stop-Process sobre ellos.
-- Para Ctrl+F5: usar Ctrl+Alt+P, filtro QuizArena.Servidor, seleccionar PID real y adjuntar; Debug > Terminate All. F5 puede interrumpir pruebas negativas con HubException; Ctrl+F5 evita esas pausas.
-- No automatizar consolas con comandos UI.
-- Primeros auxiliares fallaron por ruta de informe/proyecto de referencia. Corregidos; NO reusar ejecutables viejos bloqueados. Pruebas aisladas actuales incluyen fuente servidor y UseAppHost=false.
+## Validación automática
 
-## Comandos y rutas
-PowerShell; SDK 10.0.401.
-DOTNET_CLI_HOME=C:/Users/Juan/Documents/Codex/2026-11-23/te/work/dotnet-home
-NUGET_PACKAGES=C:/Users/Juan/Documents/Codex/2026-11-23/te/work/nuget-packages
-Compilar repo: `dotnet build QuizArena.sln --no-restore` con proyectos detenidos.
-EF: `work/invocar_ef.ps1 -Comando @('migrations','has-pending-model-changes')`; fijar Logging__EventLog__LogLevel__Default=None.
-SignalR restaurado desde feed local work/fase7/nuget (14 nupkg) por problema TLS de dotnet; descargas HTTPS verificadas con Python. No desactivar certificados.
-Scripts implementar_71.py, implementar_72.py, implementar_73.py, implementar_745.py YA EJECUTADOS, NO repetirlos.
-Proyecto work/fase7/Pruebas contiene última prueba 7.3–7.5; Program-71.txt y Program-72.txt conservan previas. No repetir pruebas que crean salas sin comprobar primero que cuentas QA estén libres.
+Compilación final de `QuizArena.sln`, incluyendo WebApplication1: **0 errores y 0 advertencias**.
+EF `migrations has-pending-model-changes`: sin cambios pendientes.
 
-El usuario pidió dejar todo preparado si se agota su límite semanal; este punto permite retomar sin repetir fases ni borrar datos.
+Validaciones previas: **280 comprobaciones** (12 SignalR, 39 chat, 29 supervisor/revancha,
+77 equipos, 48 individuales, 35 salas, 32 acceso/banco, 4 clasificación/SQL y 4 reinicio).
+Una comprobación antigua exigía el límite de reacciones: esa expectativa queda
+sustituida por la petición actual y las pruebas nuevas. No presentar las 280 como
+una nueva ejecución de esta sesión ni sumar resultados con políticas incompatibles.
+
+Prueba nueva `ReaccionesSinEspera`: **32 comprobaciones superadas**, dos aplausos
+en **9 ms**, ráfagas mixtas, veinte envíos concurrentes, privacidad entre equipos,
+autorización, tipos, historial efímero y partida completa tras las ráfagas.
+
+Evidencias:
+- `resultado-reacciones-20261126.json` y `ReaccionesSinEspera/Program.cs`.
+- `resultado-visual-reacciones-20261126.json`.
+- `resultado-71.txt`, `resultado-72.txt`, `resultado-73-75.txt`.
+- `resultado-regresion-equipos.json`, `regresion-equipos-v2.log`, `regresion-individual-final.log`.
+- `../resultado-fase7-salas.json`, `../resultado-fase7-acceso.json`.
+- `resultado-clasificacion.json`, `resultado-reinicio.json`.
+- `resultado-integridad-20261126.json` y `verificar_integridad_reacciones.py`.
+
+## Validación nativa terminada
+
+Cuatro procesos WinForms (CarlosQA, LuciaQA, PabloQA y MartaQA) en sala privada
+4F63D090: un clic del anfitrión abrió las cuatro partidas, se comprobó chat
+privado, recepción solo propia, cambio de voto, unanimidad y confirmación con bloqueo.
+La primera partida visual, Id 17, terminó Equipo 1 400 y Equipo 2 0.
+
+La revancha se solicitó con el botón real; reinició preparación y abrió cuatro
+partidas nuevas sin puntos ni votos heredados. Durante esta segunda partida se
+**detuvo y reinició realmente el servidor** manteniendo los cuatro clientes abiertos.
+Se observaron desconexión, botones protegidos, errores controlados y recuperación.
+Se dejó vencer el plazo real de SQLite; al reiniciar, el supervisor avanzó las
+fases vencidas sin duplicar puntuación ni decisiones definitivas. La revancha,
+Id 18, finalizó Equipo 1 400 y Equipo 2 200. Evidencias: `final-visual-1.json`,
+`reinicio-visual.json`, `decisiones-antes-reinicio.json`, `fase-detenida.json`,
+`final-visual-2.json` y `resultado-reinicio.json`.
+
+El 26/11 se verificó doble clic real en Aplauso, Ánimo y Sorpresa en ChatForm,
+sala finalizada F00C22A7: se recibieron dos de cada tipo. El servidor estaba
+adjunto al depurador de Visual Studio y siguió ejecutándose sin interrupción.
+Los diseñadores de ChatForm y ClasificacionForm cargaron correctamente después
+de corregir las propiedades de clasificación. Los clientes temporales están cerrados;
+VS queda con el diseñador de ClasificacionForm abierto y la prueba detenida.
+
+## Datos y migraciones
+
+Ocho migraciones aplicadas, incluidas `20261124224017_ChatSalas` y
+`20261124224444_RevanchaSalas`. No se borró ni recreó SQLite.
+Auditoría final: **633 filas anteriores comprobadas**, SQLite `ok`, cero referencias
+inválidas, 10 jugadores, 11 categorías, 112 preguntas, 9 mensajes y 20 partidas
+(19 anteriores y una nueva prueba). Cuentas QA 4/5/6/9 sin sala; se liberaron sus
+cuatro membresías de la sala de prueba anterior y las de la nueva prueba,
+conservando todos los historiales. La anfitriona de la antigua sala QA quedó
+transferida a la última participante al salir. Los demás datos anteriores coinciden. SQLite sigue excluido de Git.
+El usuario ya incluyó el banco marcado Propias en el commit abff1be; se conserva
+esa decisión y se corrige la documentación que aún lo describía como excluido.
+
+Respaldo previo a esta corrección: `.../te/outputs/quizarena-antes-correccion-reacciones.db`.
+Instantánea privada: `work/fase7/antes-correccion-reacciones.json`.
+Respaldos originales: `.../te/outputs/QuizArena-antes-fase7.zip` y `quizarena-antes-fase7.db`.
+No publicar instantáneas de filas, contraseñas, cookies, bases ni bancos privados.
+
+## Si se retoma este chat
+
+No queda implementación pendiente de la fase 7. La siguiente es la fase 8,
+cuando el usuario aporte sus instrucciones. No repetir migraciones ni los scripts
+`implementar_71.py`, `implementar_72.py`, `implementar_73.py`, `implementar_745.py`.
+
+Cambios de esta continuación: SalaHub, diseñador de clasificación, README y este
+archivo, más los recursos vacíos ChatForm.resx y ClasificacionForm.resx
+generados por Visual Studio al revisar los diseñadores. Los cambios previos del usuario en QuizArena.sln y WebApplication1 se
+conservan. No se ha creado commit ni ejecutado push en esta continuación.
+
+Para compilar: `dotnet build QuizArena.sln --no-restore` con ejecución detenida.
+SDK disponible 10.0.401. Variables del entorno auxiliar:
+- DOTNET_CLI_HOME=`C:/Users/Juan/Documents/Codex/2026-11-23/te/work/dotnet-home`
+- NUGET_PACKAGES=`C:/Users/Juan/Documents/Codex/2026-11-23/te/work/nuget-packages`
+- Logging__EventLog__LogLevel__Default=`None` para herramientas EF.
+
+EF: ejecutar desde el repo el script absoluto `.../te/work/invocar_ef.ps1`
+con `-Comando @('migrations','has-pending-model-changes')`.
+No lanzar auxiliares antiguos con apphost que produjeron avisos JIT: los proyectos
+actuales usan `UseAppHost=false` y capturan errores. Aquellos avisos ya se cerraron.

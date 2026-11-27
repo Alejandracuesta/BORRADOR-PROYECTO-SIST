@@ -11,6 +11,9 @@ public partial class ChatForm : Form
     private readonly string codigoSala = "";
     private bool soloEquipo;
     private bool enviando;
+    private bool cargandoHistorial;
+    private bool historialPendiente;
+    private int jugadorId;
     private readonly CancellationTokenSource cierre = new();
     private readonly HashSet<int> mensajesMostrados = new();
 
@@ -36,6 +39,16 @@ public partial class ChatForm : Form
             : "Chat general de sala";
 
         tiempoReal.MensajeRecibido += AlRecibirMensaje;
+        tiempoReal.ChatActualizado += AlCambiarSala;
+        btnEditarMensaje.Click += async (_, _) => await ModificarMensajeAsync(false);
+        btnEliminarMensaje.Click += async (_, _) => {
+            if (lstMensajes.SelectedItem is MensajeVisible && MessageBox.Show(this, "¿Eliminar el contenido del mensaje seleccionado?", "Chat", MessageBoxButtons.YesNo) == DialogResult.Yes) await ModificarMensajeAsync(true);
+        };
+        lstMensajes.SelectedIndexChanged += (_, _) => {
+            bool propio = lstMensajes.SelectedItem is MensajeVisible m && m.Mensaje.JugadorId == jugadorId && !m.Mensaje.Eliminado;
+            btnEditarMensaje.Enabled = propio; btnEliminarMensaje.Enabled = propio;
+            if (propio && lstMensajes.SelectedItem is MensajeVisible seleccionado) txtMensaje.Text = seleccionado.Mensaje.Texto;
+        };
         tiempoReal.ReaccionRecibida += AlRecibirReaccion;
         tiempoReal.ConexionRestaurada += SolicitarHistorial;
         tiempoReal.SalaActualizada += AlCambiarSala;
@@ -68,8 +81,12 @@ public partial class ChatForm : Form
 
     private async Task CargarHistorialAsync()
     {
+        if (cargandoHistorial) { historialPendiente = true; return; }
+        cargandoHistorial = true;
         try
         {
+            var perfil = await api.GetFromJsonAsync<PerfilJugador>("api/cuenta", cierre.Token);
+            jugadorId = perfil?.Id ?? 0;
             var sala = await api.GetFromJsonAsync<SalaDetalleApi>($"api/salas/{codigoSala}", cierre.Token);
             if (IsDisposed || Disposing) return;
             bool privado = sala?.Modalidad == "Equipos" && sala.Estado == "EnPartida";
@@ -82,13 +99,23 @@ public partial class ChatForm : Form
             if (IsDisposed || Disposing)
                 return;
 
+            int? seleccionadoId = (lstMensajes.SelectedItem as MensajeVisible)?.Mensaje.Id;
+            string borrador = txtMensaje.Text;
+            mensajesMostrados.Clear(); lstMensajes.Items.Clear();
             foreach (var mensaje in mensajes ?? new())
                 AgregarMensaje(mensaje);
+            if (seleccionadoId.HasValue)
+                lstMensajes.SelectedItem = lstMensajes.Items.OfType<MensajeVisible>().FirstOrDefault(m => m.Mensaje.Id == seleccionadoId.Value);
+            txtMensaje.Text = borrador;
         }
         catch (Exception ex)
         {
             if (!IsDisposed && !Disposing)
                 MessageBox.Show(this, ex.Message);
+        }
+        finally {
+            cargandoHistorial = false;
+            if (historialPendiente && !cierre.IsCancellationRequested) { historialPendiente = false; SolicitarHistorial(); }
         }
     }
 
@@ -149,6 +176,7 @@ public partial class ChatForm : Form
             return;
         }
 
+        if (cargandoHistorial) historialPendiente = true;
         AgregarMensaje(mensaje);
     }
 
@@ -163,9 +191,7 @@ public partial class ChatForm : Form
         if (!mensajesMostrados.Add(mensaje.Id))
             return;
 
-        lstMensajes.Items.Add(
-            $"[{mensaje.FechaUtc:HH:mm:ss}] " +
-            $"{mensaje.Nombre}: {mensaje.Texto}");
+        lstMensajes.Items.Add(new MensajeVisible(mensaje));
 
         lstMensajes.TopIndex = lstMensajes.Items.Count - 1;
     }
@@ -203,11 +229,27 @@ public partial class ChatForm : Form
         if (tiempoReal != null)
         {
             tiempoReal.MensajeRecibido -= AlRecibirMensaje;
+            tiempoReal.ChatActualizado -= AlCambiarSala;
             tiempoReal.ReaccionRecibida -= AlRecibirReaccion;
             tiempoReal.ConexionRestaurada -= SolicitarHistorial;
             tiempoReal.SalaActualizada -= AlCambiarSala;
             tiempoReal.PartidaActualizada -= AlCambiarSala;
         }
         base.OnFormClosed(e);
+    }
+    private sealed record MensajeVisible(MensajeChatApi Mensaje)
+    {
+        public override string ToString() => $"[{Mensaje.FechaUtc:HH:mm:ss}] {Mensaje.Nombre}: {Mensaje.Texto}" + (Mensaje.EditadoUtc.HasValue && !Mensaje.Eliminado ? " (editado)" : "");
+    }
+    private async Task ModificarMensajeAsync(bool eliminar)
+    {
+        if (enviando || lstMensajes.SelectedItem is not MensajeVisible elegido || elegido.Mensaje.JugadorId != jugadorId || elegido.Mensaje.Eliminado) return;
+        enviando = true;
+        try {
+            using var respuesta = eliminar ? await api.DeleteAsync($"api/chat/mensajes/{elegido.Mensaje.Id}", cierre.Token) : await api.PutAsJsonAsync($"api/chat/mensajes/{elegido.Mensaje.Id}", new { texto = txtMensaje.Text }, cierre.Token);
+            await RespuestaApi.ComprobarAsync(respuesta, cierre.Token);
+            if (!IsDisposed && !Disposing) { txtMensaje.Clear(); await CargarHistorialAsync(); }
+        } catch (Exception ex) { if (!IsDisposed && !Disposing) MessageBox.Show(this, ex.Message); }
+        finally { enviando = false; }
     }
 }

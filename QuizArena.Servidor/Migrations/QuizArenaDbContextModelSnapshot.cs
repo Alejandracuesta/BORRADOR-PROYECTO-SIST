@@ -78,6 +78,19 @@ namespace QuizArena.Servidor.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("EliminadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EsAdministrador")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime>("FechaRegistroUtc")
                         .HasColumnType("TEXT");
 
@@ -106,6 +119,12 @@ namespace QuizArena.Servidor.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EditadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Eliminado")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("EquipoPartidaId")

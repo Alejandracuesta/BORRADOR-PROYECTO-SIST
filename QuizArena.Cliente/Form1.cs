@@ -47,6 +47,8 @@ public partial class Form1 : Form
         btnPerfil.Click += btnPerfil_Click;
         btnSalir.Click += btnSalir_Click;
         btnSalas.Click += btnSalas_Click;
+        btnAdministracion.Click += (_, _) => { if (!solicitudEnCurso && jugadorActual?.EsAdministrador == true) { using var ventana = new AdministracionForm(httpClient); ventana.ShowDialog(this); } };
+        btnHistorial.Click += (_, _) => { if (!solicitudEnCurso && jugadorActual != null) { using var ventana = new HistorialForm(httpClient); ventana.ShowDialog(this); } };
         Disposed += (_, _) => LiberarRecursos();
 
         ActualizarControles();
@@ -107,6 +109,7 @@ public partial class Form1 : Form
             if (iniciarSesion)
             {
                 jugadorActual = jugador;
+                await ActualizarPerfilAsync(cancellationToken);
                 lblJugador.Text = $"Sesión iniciada: {jugador.Nombre} (ID {jugador.Id})";
                 ActualizarControles();
 
@@ -124,43 +127,19 @@ public partial class Form1 : Form
 
     private async void btnPerfil_Click(object? sender, EventArgs e)
     {
-        await EjecutarSolicitudAsync(async cancellationToken =>
-        {
-            using var respuesta = await httpClient.GetAsync("api/acceso/yo", cancellationToken);
-
-            if (respuesta.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                CerrarSesionLocal();
-                MostrarError("La sesión ha terminado. Vuelve a iniciar sesión.");
-                return;
-            }
-
-            if (!respuesta.IsSuccessStatusCode)
-            {
-                MostrarError(await LeerErrorAsync(respuesta, cancellationToken));
-                return;
-            }
-
-            var perfil = await respuesta.Content.ReadFromJsonAsync<PerfilJugador>(
-                cancellationToken: cancellationToken);
-
-            if (!PuedeActualizar)
-                return;
-
-            if (perfil is null || !EsPerfilValido(perfil))
-            {
-                MostrarError("No se ha recibido un perfil válido.");
-                return;
-            }
-
-            jugadorActual = perfil;
-            lblJugador.Text = $"Sesión iniciada: {perfil.Nombre} (ID {perfil.Id})";
-            lblEstado.Text = "Servidor conectado";
-
-            MessageBox.Show(this,
-                $"ID: {perfil.Id}\nJugador: {perfil.Nombre}\nRegistro (UTC): {perfil.FechaRegistroUtc:u}",
-                "Mi perfil", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        });
+        if (!PuedeActualizar || solicitudEnCurso || jugadorActual is null) return;
+        using var ventana = new PerfilForm(httpClient);
+        if (ventana.ShowDialog(this) == DialogResult.Abort) CerrarSesionLocal();
+        else await EjecutarSolicitudAsync(ActualizarPerfilAsync);
+    }
+    private async Task ActualizarPerfilAsync(CancellationToken ct)
+    {
+        using var respuesta = await httpClient.GetAsync("api/cuenta", ct);
+        if (respuesta.StatusCode == HttpStatusCode.Unauthorized) { CerrarSesionLocal(); return; }
+        respuesta.EnsureSuccessStatusCode();
+        var perfil = await respuesta.Content.ReadFromJsonAsync<PerfilJugador>(cancellationToken: ct);
+        if (!PuedeActualizar || perfil is null) return;
+        jugadorActual = perfil; lblJugador.Text = $"Sesión iniciada: {perfil.Nombre} (ID {perfil.Id})"; ActualizarControles();
     }
 
     private async void btnSalir_Click(object? sender, EventArgs e)
@@ -277,6 +256,8 @@ public partial class Form1 : Form
         btnSalir.Enabled = !sinSesion && disponible;
         btnSalas.Enabled = !sinSesion && disponible;
         btnComprobar.Enabled = disponible;
+        btnAdministracion.Enabled = !sinSesion && disponible && jugadorActual!.EsAdministrador;
+        btnHistorial.Enabled = !sinSesion && disponible;
         UseWaitCursor = solicitudEnCurso;
     }
 

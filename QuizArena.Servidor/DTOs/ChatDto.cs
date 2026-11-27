@@ -7,7 +7,9 @@ public record MensajeSalaDto(
     string Nombre,
     string Texto,
     DateTime FechaUtc,
-    int? EquipoPartidaId
+    int? EquipoPartidaId,
+    bool Eliminado = false,
+    DateTime? EditadoUtc = null
 );
 
 public record ReaccionDto(

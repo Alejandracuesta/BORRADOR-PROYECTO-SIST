@@ -18,7 +18,7 @@ Content-Type: application/json
 
 {
   "nombre": "PruebaHttp",
-  "password": "cambiame123"
+  "clave": "cambiame123"
 }
 
 ### Iniciar sesión (devuelve la cookie de sesión)
@@ -27,7 +27,7 @@ Content-Type: application/json
 
 {
   "nombre": "PruebaHttp",
-  "password": "cambiame123"
+  "clave": "cambiame123"
 }
 
 ### Perfil de la sesión activa

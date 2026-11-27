@@ -24,7 +24,7 @@ public class JugadoresController : ControllerBase
         CancellationToken cancellationToken)
     {
         var jugadores = await db.Jugadores
-            .AsNoTracking()
+            .AsNoTracking().Where(j => j.Activo)
             .OrderBy(j => j.Id)
             .Select(j => new JugadorRespuestaDto(
                 j.Id,
@@ -41,7 +41,7 @@ public class JugadoresController : ControllerBase
         int id, CancellationToken cancellationToken)
     {
         var jugador = await db.Jugadores
-            .AsNoTracking()
+            .AsNoTracking().Where(j => j.Activo)
             .SingleOrDefaultAsync(j => j.Id == id, cancellationToken);
 
         if (jugador is null)
@@ -58,52 +58,7 @@ public class JugadoresController : ControllerBase
             jugador.FechaRegistroUtc));
     }
 
-    // POST /api/jugadores
     [HttpPost]
-    public async Task<ActionResult<JugadorRespuestaDto>> Crear(
-        CrearJugadorDto datos, CancellationToken cancellationToken)
-    {
-        string nombre = datos.Nombre.Trim();
-
-        if (nombre.Length < 3)
-        {
-            return BadRequest(new
-            {
-                mensaje = "El nombre debe tener al menos 3 caracteres"
-            });
-        }
-
-        var jugador = new Jugador
-        {
-            Nombre = nombre,
-            NombreNormalizado = nombre.ToUpperInvariant(),
-            FechaRegistroUtc = DateTime.UtcNow
-        };
-
-        db.Jugadores.Add(jugador);
-
-        try
-        {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is SqliteException error &&
-                  error.SqliteExtendedErrorCode == 2067)
-        {
-            return Conflict(new
-            {
-                mensaje = "Ya existe un jugador con ese nombre"
-            });
-        }
-
-        var respuesta = new JugadorRespuestaDto(
-            jugador.Id,
-            jugador.Nombre,
-            jugador.FechaRegistroUtc);
-
-        return CreatedAtAction(
-            nameof(ObtenerPorId),
-            new { id = jugador.Id },
-            respuesta);
-    }
+    public IActionResult Crear(CrearJugadorDto datos) => StatusCode(410,
+        new { mensaje = "Registra tu cuenta con contraseña en /api/acceso/registrar" });
 }

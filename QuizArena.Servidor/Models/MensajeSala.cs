@@ -17,4 +17,6 @@ public class MensajeSala
     public string Texto { get; set; } = "";
 
     public DateTime FechaUtc { get; set; }
+    public bool Eliminado { get; set; }
+    public DateTime? EditadoUtc { get; set; }
 }

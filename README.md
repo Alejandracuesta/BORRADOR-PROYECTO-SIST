@@ -1,6 +1,6 @@
 # BORRADOR-PROYECTO-SIST
 
-## Quiz Arena — fase 7: tiempo real, chat, revancha e historial
+## Quiz Arena — fase 8: CRUD, administración y validación final
 
 Solución C# para Visual Studio 2026 y **.NET 10**, con una API REST en
 `http://localhost:5080`, una base de datos SQLite y varias instancias WinForms.
@@ -14,6 +14,196 @@ La fase 5 permite completar partidas individuales con preguntas compartidas,
 plazos oficiales, respuestas definitivas, puntuaciones y clasificación final.
 La fase 6 abre automáticamente la partida en todos los clientes y añade equipos
 de dos o tres integrantes, votos provisionales y confirmación por unanimidad.
+
+## Fase 8: cuentas, administración e historial
+
+La solución de entrega contiene tres proyectos: `QuizArena.Servidor` (ASP.NET
+Core REST, SignalR y SQLite), `QuizArena.Cliente` (Windows Forms) y
+`QuizArena.Tests` (xUnit). Se ejecuta en un único ordenador con .NET 10 y Visual
+Studio 2026. Los clientes mantienen sesiones independientes. El servidor calcula
+puntos, valida permisos y coordina las operaciones concurrentes; WinForms consume
+HTTP y las notificaciones SignalR.
+
+```mermaid
+flowchart LR
+    C[Clientes Windows Forms] -->|REST y cookies| S[QuizArena.Servidor]
+    S -->|Eventos SignalR| C
+    S --> D[(SQLite local)]
+    T[QuizArena.Tests] -->|REST y SignalR| A[Servidor de pruebas]
+    A --> P[(SQLite temporal)]
+```
+
+### Arranque y Swagger
+
+Desde la carpeta de la solución:
+
+```powershell
+dotnet restore QuizArena.sln
+dotnet build QuizArena.sln
+dotnet run --project QuizArena.Servidor --launch-profile http
+```
+
+El arranque aplica las migraciones pendientes sin recrear la base. El perfil
+`http` escucha en **localhost:5080 y localhost:5162**. Ejecutar después
+`QuizArena.Cliente.exe` o seleccionar el perfil de inicio de servidor y cliente
+en Visual Studio. Para cuatro jugadores, abrir cuatro procesos del cliente.
+
+Swagger: <http://localhost:5162/swagger/index.html>. También está disponible en
+el puerto 5080. `/swagger` redirige a `/swagger/index.html` y el documento es
+`/openapi/v1.json`. Las descripciones distinguen operaciones públicas, con sesión
+y exclusivas de Administrador. Iniciar sesión mediante `/api/acceso/entrar` en
+Swagger permite utilizar su cookie en las operaciones protegidas.
+
+La interfaz Swagger carga sus recursos desde unpkg y necesita conexión a
+Internet; la API REST, SignalR, SQLite y los clientes funcionan localmente.
+
+SQLite utiliza `QuizArena.Servidor/quizarena.db` por defecto. Para otra base:
+
+```powershell
+$env:BaseDatos__Ruta = 'C:\Ruta\BaseSeparada.db'
+dotnet run --project QuizArena.Servidor --launch-profile http
+Remove-Item Env:\BaseDatos__Ruta
+```
+
+Las pruebas xUnit fijan automáticamente una ruta temporal única **antes** de
+construir el servidor y comprueban esa ruta. No utilizan los datos reales.
+Un clon nuevo necesita importar los bancos JSON siguiendo la sección de
+importación de este README; los usuarios locales se registran desde el cliente.
+
+### Cuenta y permisos
+
+`PerfilForm`, accesible desde «Ver mi perfil», permite cambiar nombre y
+contraseña y eliminar la propia cuenta, comprobando la contraseña actual.
+La baja exige abandonar cualquier sala, anonimiza el registro y conserva su Id y
+sus resultados. Tras el HTTP 204, el cliente vuelve a la pantalla de acceso.
+Se reserva el prefijo `BAJA_`. El antiguo `POST /api/jugadores` devuelve 410;
+el registro con contraseña se hace mediante `/api/acceso/registrar`.
+
+Cada petición autenticada valida que la cuenta siga activa y actualiza el nombre
+y el rol de su cookie. Los métodos sensibles del Hub comprueban también `Activo`
+para conexiones persistentes. Las operaciones administrativas exigen el rol en
+el servidor. `GET /api/cuenta` solo revela el indicador administrativo de la
+propia cuenta; los listados públicos no incluyen contraseñas ni hashes.
+
+Para habilitar al primer administrador, registrar una cuenta con contraseña
+propia, detener el servidor y ejecutar localmente:
+
+```powershell
+dotnet run --project QuizArena.Servidor -- --hacer-admin=TU_USUARIO
+```
+
+Sustituir `TU_USUARIO` por el nombre registrado. El comando valida que exista una
+cuenta activa con contraseña, actualiza su rol y termina sin iniciar el servidor.
+No existe un endpoint público de promoción ni una contraseña administrativa
+fija. Al volver a arrancar, el botón «Administración» se habilita para esa cuenta.
+La validación probó este procedimiento con una cuenta de una base temporal.
+La activación de una cuenta administradora en la base real queda como operación
+local del propietario; no se ha modificado el rol de sus cuentas existentes.
+
+### Endpoints de la fase 8
+
+| Método | Ruta | Permiso y comportamiento |
+| --- | --- | --- |
+| GET | `/api/cuenta` | Propia cuenta activa, incluido `esAdministrador` |
+| PUT | `/api/cuenta` | Nombre nuevo y contraseña actual; 409 si está ocupado |
+| PUT | `/api/cuenta/clave` | Contraseñas actual y nueva; 204 |
+| DELETE | `/api/cuenta` | JSON `claveActual`; baja lógica, 409 si está en sala |
+| GET | `/api/categorias/{id}` | Consulta pública; 404 si no existe |
+| POST / PUT | `/api/categorias` / `/api/categorias/{id}` | Administrador; alta 201, edición 200 |
+| DELETE | `/api/categorias/{id}` | Administrador; 204 solo si no tiene preguntas ni salas |
+| GET | `/api/preguntas/admin` | Administrador; incluye inactivas, solución, fuente y licencia; `pagina`/`tamano` |
+| GET | `/api/preguntas/admin/{id}` | Administrador; detalle para edición |
+| POST | `/api/preguntas` | Administrador; valida categoría, opciones y enunciado único; 201 |
+| PUT | `/api/preguntas/{id}` | Administrador; 409 si la pregunta ya tiene historial |
+| DELETE | `/api/preguntas/{id}` | Administrador; desactiva sin eliminar la fila |
+| PUT | `/api/preguntas/{id}/activar` | Administrador; reactiva una pregunta existente |
+| DELETE | `/api/salas/{codigo}` | Anfitrión; 409 durante una partida; conserva historiales |
+| PUT | `/api/chat/mensajes/{id}` | Solo autor; texto de 1–250 caracteres |
+| DELETE | `/api/chat/mensajes/{id}` | Solo autor; sustituye el texto por `[Mensaje eliminado]` |
+| GET | `/api/partidas/historial` | Partidas finalizadas del jugador autenticado |
+| GET | `/api/partidas/{id}/resumen` | Solo participantes; resultado, jugadores y equipos |
+
+Las operaciones nuevas se añaden a las rutas anteriores de acceso, salas,
+partidas, equipos, clasificaciones y preguntas públicas descritas más abajo.
+Los GET públicos de preguntas siguen sin revelar soluciones. Los errores de
+validación devuelven 400, los recursos inexistentes 404, los conflictos 409 y
+las solicitudes sin sesión o permisos 401/403.
+
+### Reglas de integridad y concurrencia
+
+- Cuentas: desactivación, anonimización y retirada de credenciales; resultados
+  conservados y cookies antiguas rechazadas.
+- Preguntas: DELETE desactiva; el motor solo selecciona activas para nuevas
+  partidas. Una pregunta ya asignada no se edita: se desactiva y se crea otra
+  versión. Importador y API comparten `ValidadorPreguntas`.
+- Categorías: borrado físico solo sin referencias, incluso preguntas inactivas.
+- Salas: solo el anfitrión cancela; se retiran participantes y se conserva la
+  sala si tiene partidas. Sin historial se elimina físicamente.
+- Mensajes: solo su autor edita o elimina. DELETE retira el contenido original
+  manteniendo las relaciones; un mensaje eliminado no admite edición posterior.
+- Partidas y respuestas definitivas: sin endpoints para modificar puntos ni
+  eliminar resultados. El historial distingue el modo de cada partida por sus
+  asignaciones históricas y muestra los puntos del equipo cuando corresponde.
+
+El mismo `CoordinadorSalas` serializa inicios, cambios del banco, cancelaciones,
+chat y bajas de cuenta. Las comprobaciones de pertenencia se realizan dentro
+del bloqueo en las mutaciones de sala. Los índices únicos resuelven también
+nombres y enunciados duplicados. El supervisor mantiene los plazos oficiales.
+
+`ChatActualizado` avisa de una edición o eliminación sin transportar el texto.
+El cliente recupera su historial autorizado mediante REST; las notificaciones
+privadas se limitan a destinatarios del equipo y miembros activos de la sala.
+El chat conserva la selección y el borrador al refrescar. Se mantienen el límite
+de mensajes de un segundo y las **reacciones consecutivas sin espera de dos
+segundos**, conforme a la petición del usuario.
+
+`AdministracionForm` contiene pestañas de categorías y preguntas, edición,
+desactivación y reactivación. `HistorialForm` ofrece consulta de resultados sin
+botones para modificar puntuaciones. Los formularios utilizan el mismo cliente
+HTTP autenticado. El podio individual se conserva; el podio de equipos utiliza
+su marcador real e identifica los empates.
+
+### Migraciones y pruebas
+
+- `20261126150616_AdministracionJugadores`: añade `Activo` (valor predeterminado
+  true), `EsAdministrador` (false) y `EliminadoUtc` a los jugadores existentes.
+- `20261126150755_EdicionMensajes`: añade `Eliminado` y `EditadoUtc` al chat.
+
+Ambas migraciones se revisaron y aplicaron. Hay diez en total y el modelo EF
+no tiene cambios pendientes. Los respaldos locales se guardaron fuera de Git.
+
+```powershell
+dotnet test QuizArena.sln
+```
+
+**19 casos xUnit superados**, sin omisiones. Cubren cuentas, cookies, roles,
+categorías, preguntas y validación compartida, privacidad de chat con SignalR
+real, edición y borrado, reacciones seguidas, aforo concurrente, respuestas
+simultáneas, puntuación por rapidez, equipos de dos y tres miembros, decisiones
+irreversibles, vencimientos, supervisor sin sondeo, revancha, historial, Swagger
+y conservación de resultados. Todas sus escrituras y bajas usan SQLite temporal.
+
+La validación WinForms utilizó cuatro procesos independientes sobre `visual.db`:
+altas y edición de categorías, alta de pregunta, cambio de nombre, edición de
+chat propio, entrada automática y partida individual, equipos, revancha e
+historial después de reiniciar. Se observaron resultados individuales 1048–821,
+equipos 650–650 y revancha 1200–1200. La preparación de salas y parte de las
+respuestas, votos y confirmaciones se apoyaron en REST. Los cambios de contraseña,
+bajas de cuenta y permisos de borrado se verificaron automáticamente; no se
+presentan como una secuencia manual completa de esos botones.
+
+Una exportación limpia del código, con solo servidor, cliente y pruebas,
+también restauró, compiló con 0 errores y 0 advertencias y superó los mismos
+19 casos xUnit. Esta comprobación valida la entrega sin depender del proyecto
+auxiliar local ni de la base del desarrollador.
+
+Los nuevos diseñadores de perfil, administración e historial se abrieron en
+Visual Studio. Compilación: **0 errores y 0 advertencias**. El código de pruebas,
+formularios y migraciones forma parte de la solución. SQLite, archivos privados,
+`bin`, `obj` y configuración local de Visual Studio se mantienen excluidos.
+
+Guion de presentación: [DEMO-FASE8.md](DEMO-FASE8.md).
+Estado de entrega y continuación: [CONTINUAR-FASE8.md](CONTINUAR-FASE8.md).
 
 ```text
 QuizArena.sln
@@ -63,7 +253,7 @@ QuizArena.sln
 │   │   └── MotorEquipos.cs
 │   ├── Datos/
 │   │   ├── preguntas.json
-│   │   └── preguntas_trivial_100_quizarena.json   Solo local, excluido de Git
+│   │   └── preguntas_trivial_100_quizarena.json   Banco propio incluido en Git
 │   ├── Migrations/
 │   └── Properties/launchSettings.json
 └── QuizArena.Cliente
@@ -191,10 +381,10 @@ importador los ignora. `Datos/preguntas_trivial_100_quizarena.md` contiene el
 mismo banco en formato legible, con cada opción marcada como `[CORRECTA]` o
 `[INCORRECTA]`.
 
-El archivo sigue listado en `.gitignore`; como las preguntas son propias, puede
-retirarse de esa lista para incluirlo en Git. Mientras siga excluido, un clon
-nuevo necesita disponer de ese archivo local para reproducir el banco completo
-de 112 preguntas.
+El banco marcado como `Propias` ya está incluido en Git desde el commit
+`abff1be` (`preguntas`). Un clon nuevo dispone de los dos JSON para importar
+el banco completo de 112 preguntas. SQLite sigue siendo local y no se versiona.
+Cualquier otro banco sin autorización de publicación debe mantenerse excluido.
 
 Con el servidor detenido, abrir una terminal en el proyecto servidor:
 
@@ -359,8 +549,8 @@ para ejecución; su código visual se conserva en `SalasForm.Designer.cs`.
   participante más antiguo. Una sala en espera se elimina al salir el último;
   una sala finalizada conserva su historial y elimina solo la pertenencia activa.
 
-Un `System.Windows.Forms.Timer` consulta los datos cada dos segundos sin solapar
-peticiones. El sondeo conserva la selección pública y los cambios del anfitrión
+Desde la fase 7, SignalR notifica los cambios y un temporizador consulta REST
+cada diez segundos como respaldo, sin solapar peticiones. El sondeo conserva la selección pública y los cambios del anfitrión
 pendientes de guardar. Al cerrar la ventana se detiene el temporizador y se
 cancelan sus peticiones, conservando el cliente HTTP del formulario de acceso.
 Una sesión caducada devuelve al acceso para volver a identificarse.
@@ -369,7 +559,7 @@ Una sesión caducada devuelve al acceso para volver a identificarse.
 pertenencia guardada. Las salas, participantes y preparación persisten al
 reiniciar el servidor. La lista representa miembros, no presencia de red: esta
 fase no detecta desconexiones. Desde la fase 6 se inician partidas individuales
-y por equipos. SignalR y reconexión avanzada quedan para la fase 7.
+y por equipos. La fase 7 incorpora SignalR y recuperación de la conexión.
 
 ### API de salas
 
@@ -500,8 +690,9 @@ Para probar una partida completa:
    y se conservarán los resultados de la anterior.
 
 Cerrar la pantalla durante el juego no abandona ni pausa la partida. Se puede
-volver a entrar desde la sala con el tiempo que quede. En esta fase no se inicia
-la revancha ni SignalR. El modo equipos se incorpora a continuación.
+volver a entrar desde la sala con el tiempo que quede. La fase 7 incorpora
+SignalR y la opción de solicitar revancha tras finalizar. El modo equipos se
+describe a continuación.
 
 ### Entrada automática y códigos de sala (fase 6.1)
 
@@ -651,9 +842,11 @@ tras abandonar. `ChatController` devuelve los últimos 50 mensajes autorizados,
 ordenados cronológicamente. El cliente elimina duplicados por Id, recupera el
 historial tras reconectar y adapta el ámbito cuando cambia la fase.
 
-`ControlFrecuencia` limita cada cuenta a un mensaje por segundo y una reacción
-cada dos segundos, incluso con varias conexiones. Los mensajes admiten de 1 a
-250 caracteres. Aplauso, Ánimo y Sorpresa no se almacenan en SQLite.
+`ControlFrecuencia` limita cada cuenta a un mensaje de chat por segundo, incluso
+con varias conexiones. Los mensajes admiten de 1 a 250 caracteres. Por petición
+del usuario, las reacciones Aplauso, Ánimo y Sorpresa pueden enviarse seguidas,
+sin espera de dos segundos ni excepción por repetirlas. No se almacenan en
+SQLite y conservan la validación de tipo y de destinatarios autorizados.
 
 La migración `20261124224444_RevanchaSalas` sustituye el índice único de SalaId
 por uno no único. Una revancha autorizada vuelve la sala finalizada a espera
@@ -674,7 +867,7 @@ la sala. `ClasificacionForm` permite actualizar ambos listados desde las salas.
 | Hub | `/hubs/salas` | Sesión de la misma cuenta REST |
 | Hub | `EntrarSala(codigo)` / `SalirSala()` | Pertenencia comprobada |
 | Hub | `EnviarMensaje(codigo, texto, soloEquipo)` | Ámbito oficial y límite de frecuencia |
-| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y límite de frecuencia |
+| Hub | `EnviarReaccion(codigo, tipo)` | Tipo válido y destinatarios autorizados; sin espera entre reacciones |
 | GET | `/api/chat/{codigo}` | Miembro; solo historial autorizado |
 | POST | `/api/salas/{codigo}/revancha` | Anfitrión de sala finalizada |
 | GET | `/api/clasificacion/individual` | Autenticación |
@@ -690,6 +883,53 @@ Para probar reconexión, ejecutar clientes separados del depurador, detener el
 servidor y volverlo a iniciar sin cerrar esos clientes. El tiempo continúa.
 
 Estado detallado de verificación y siguiente paso: [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
+
+### Comprobaciones de la fase 7
+
+Validación completada el **26 de noviembre de 2026**:
+
+- Solución completa compilada con **0 errores y 0 advertencias**; modelo EF sin
+  cambios pendientes y ocho migraciones aplicadas. No se recreó SQLite.
+- **32 comprobaciones nuevas de reacciones** con cuatro sesiones SignalR reales:
+  dos aplausos aceptados en **9 ms**, ráfagas mixtas y veinte envíos concurrentes
+  desde dos conexiones de una cuenta. Se verificaron autenticación, pertenencia,
+  tipos válidos, privacidad bidireccional, ausencia de reacciones en el historial
+  y finalización de una partida completa después de los envíos.
+- **Doble clic real en WinForms** para Aplauso, Ánimo y Sorpresa: llegaron las dos
+  reacciones de cada tipo y Visual Studio continuó ejecutando el servidor con el
+  depurador conectado, sin excepción por frecuencia.
+- La validación anterior reunió **280 comprobaciones**: 12 de SignalR, 39 de
+  chat, 29 de supervisor/revancha/clasificación, 77 de equipos, 48 individuales,
+  35 de salas, 32 de acceso/banco, 4 de clasificación frente a SQLite y 4 tras
+  reiniciar. La comprobación antigua que exigía bloquear reacciones rápidas queda
+  sustituida por las 32 nuevas; el límite de un mensaje de chat por segundo se
+  conserva. Estos son resultados de las distintas sesiones, no una nueva
+  ejecución completa de aquellas pruebas.
+- Cuatro clientes WinForms entraron automáticamente con un único inicio del
+  anfitrión. Se observaron chat privado sin recepción rival, cambio de voto,
+  unanimidad, confirmación con bloqueo y cambio del chat a general al finalizar.
+  La revancha abrió cuatro partidas nuevas en la misma sala, con puntos y votos
+  independientes. Los resultados de ambas quedaron guardados.
+- Reinicio real del servidor con esos clientes abiertos: indicadores sin SignalR,
+  botones protegidos y errores de conexión controlados. Al volver el servidor,
+  recuperaron la sesión y la partida; el supervisor avanzó el plazo vencido y
+  conservó exactamente decisiones definitivas y puntos. La primera partida
+  visual terminó 400–0 y la revancha 400–200.
+- Diseñadores `ChatForm` y `ClasificacionForm` abiertos en Visual Studio. Se
+  corrigieron inicializadores y asignaciones encadenadas de la clasificación
+  para que sus controles se vean y puedan editarse también en el diseñador.
+- Auditoría de **633 filas anteriores**, con integridad SQLite correcta y cero
+  referencias inválidas. Se mantienen 10 jugadores, 11 categorías, 112 preguntas,
+  9 mensajes y los 19 historiales anteriores; se añade una partida de prueba.
+  Solo se liberaron las membresías temporales QA y se transfirió el anfitrión
+  de su sala al salir. Las cuentas QA quedan sin sala y los historiales se
+  conservan. SQLite sigue excluido de Git; se respeta el banco propio que ya
+  estaba incluido en el repositorio.
+
+La fase 7 queda completada con el cambio de reacciones solicitado. El estado y
+las rutas de las evidencias están recogidos en [CONTINUAR-FASE7.md](CONTINUAR-FASE7.md).
+La siguiente fase es la 8: pruebas integrales, corrección de incidencias y
+presentación final.
 
 ### Comprobaciones de la fase 6
 
